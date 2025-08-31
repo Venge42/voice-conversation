@@ -1,0 +1,32 @@
+services:
+  # Backend API Server
+  - type: web
+    name: voice-conversation-server
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: WEBSOCKET_SERVER
+        value: websocket_server
+      - key: SERVER_URL
+        value: voice-conversation-server.onrender.com
+      - key: GOOGLE_API_KEY
+        sync: false  # This will need to be set manually in Render dashboard
+
+  # Frontend Client
+  - type: web
+    name: voice-conversation-client
+    env: static
+    plan: starter
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: client/dist
+    envVars:
+      - key: VITE_SERVER_URL
+        value: https://voice-conversation-server.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

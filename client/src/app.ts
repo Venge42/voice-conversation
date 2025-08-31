@@ -187,9 +187,12 @@ class WebsocketClientApp {
       await this.pcClient.initDevices();
 
       this.log('Connecting to bot...');
+      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:7860';
+      console.log('Connecting to server:', serverUrl);
+      
       await this.pcClient.startBotAndConnect({
         // The baseURL and endpoint of your bot server that the client will connect to
-        endpoint: 'http://localhost:7860/connect',
+        endpoint: `${serverUrl}/connect`,
       });
 
       const timeTaken = Date.now() - startTime;

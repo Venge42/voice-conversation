@@ -52,10 +52,11 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.post("/connect")
 async def bot_connect(request: Request) -> Dict[Any, Any]:
     server_mode = os.getenv("WEBSOCKET_SERVER", "fast_api")
+    server_url = os.getenv("SERVER_URL", "localhost:7860")
     if server_mode == "websocket_server":
-        ws_url = "ws://localhost:8765"
+        ws_url = f"ws://{server_url}"
     else:
-        ws_url = "ws://localhost:7860/ws"
+        ws_url = f"ws://{server_url}/ws"
     return {"ws_url": ws_url}
 
 
