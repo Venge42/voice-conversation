@@ -8,7 +8,7 @@ services:
     startCommand: python server.py
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: 3.11.7
       - key: WEBSOCKET_SERVER
         value: websocket_server
       - key: SERVER_URL
