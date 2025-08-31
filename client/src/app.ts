@@ -75,7 +75,9 @@ class WebsocketClientApp {
    */
   private async loadBots(): Promise<void> {
     try {
-      const serverUrl = window.location.origin;
+      const serverUrl = import.meta.env.VITE_SERVER_URL || window.location.origin;
+      console.log('Environment VITE_SERVER_URL:', import.meta.env.VITE_SERVER_URL);
+      console.log('Using server URL:', serverUrl);
       const response = await fetch(`${serverUrl}/bots`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -295,7 +297,7 @@ class WebsocketClientApp {
       await this.pcClient.initDevices();
 
       this.log('Connecting to bot...');
-      const serverUrl = window.location.origin;
+      const serverUrl = import.meta.env.VITE_SERVER_URL || window.location.origin;
       console.log('Connecting to server:', serverUrl);
       
       const selectedBot = this.botSelect?.value;

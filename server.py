@@ -31,9 +31,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Configure CORS to allow requests from any origin
+# In production, you might want to restrict this to specific domains
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allow all origins for now
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -116,7 +117,9 @@ async def bot_connect(request: Request) -> Dict[Any, Any]:
         ws_url = f"ws://localhost:8765"
     else:
         # In fast_api mode, use the FastAPI WebSocket endpoint
-        ws_url = f"ws://{server_url}/ws?bot={bot}"
+        # Use wss:// for HTTPS and ws:// for HTTP
+        protocol = "wss" if server_url.startswith("https") else "ws"
+        ws_url = f"{protocol}://{server_url}/ws?bot={bot}"
 
     print(f"Returning WebSocket URL: {ws_url} for bot: {bot}")
 

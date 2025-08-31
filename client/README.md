@@ -99,7 +99,7 @@ Das Projekt ist Teil des Illusion-LARP e.V. und freut sich über Beiträge von:
 
 ## 📄 Lizenz
 
-© 2024 Illusion-LARP e.V. - Inseln der Macht
+© 2025 Illusion-LARP e.V. - Inseln der Macht
 
 ---
 
