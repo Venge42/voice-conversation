@@ -20,6 +20,32 @@ body {
     margin-bottom: 20px;
 }
 
+.bot-selection {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bot-selection label {
+    font-weight: bold;
+    color: #333;
+}
+
+.bot-selection select {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 14px;
+    min-width: 120px;
+}
+
+.bot-selection select:focus {
+    outline: none;
+    border-color: #4caf50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
 .controls button {
     padding: 8px 16px;
     margin-left: 10px;

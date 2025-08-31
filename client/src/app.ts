@@ -26,6 +26,7 @@ class WebsocketClientApp {
   private disconnectBtn: HTMLButtonElement | null = null;
   private statusSpan: HTMLElement | null = null;
   private debugLog: HTMLElement | null = null;
+  private botSelect: HTMLSelectElement | null = null;
   private botAudio: HTMLAudioElement;
 
   constructor() {
@@ -51,6 +52,7 @@ class WebsocketClientApp {
     ) as HTMLButtonElement;
     this.statusSpan = document.getElementById('connection-status');
     this.debugLog = document.getElementById('debug-log');
+    this.botSelect = document.getElementById('bot-select') as HTMLSelectElement;
   }
 
   /**
@@ -59,6 +61,60 @@ class WebsocketClientApp {
   private setupEventListeners(): void {
     this.connectBtn?.addEventListener('click', () => this.connect());
     this.disconnectBtn?.addEventListener('click', () => this.disconnect());
+    
+    // Initially disable connect button until a bot is selected
+    if (this.connectBtn) {
+      this.connectBtn.disabled = true;
+    }
+    
+    this.loadBots();
+  }
+
+  /**
+   * Fetch available bots from the server and populate the dropdown
+   */
+  private async loadBots(): Promise<void> {
+    try {
+      const serverUrl = window.location.origin;
+      const response = await fetch(`${serverUrl}/bots`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      if (this.botSelect) {
+        // Clear existing options
+        this.botSelect.innerHTML = '';
+        
+        // Add default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select a bot...';
+        this.botSelect.appendChild(defaultOption);
+        
+        // Add bot options
+        data.bots.forEach((bot: string) => {
+          const option = document.createElement('option');
+          option.value = bot;
+          option.textContent = bot;
+          this.botSelect!.appendChild(option);
+        });
+        
+        // Add change listener to enable/disable connect button
+        this.botSelect.addEventListener('change', () => {
+          if (this.connectBtn) {
+            this.connectBtn.disabled = !this.botSelect?.value;
+          }
+        });
+      }
+      
+      this.log(`Loaded ${data.bots.length} bots`);
+    } catch (error) {
+      this.log(`Error loading bots: ${(error as Error).message}`);
+      if (this.botSelect) {
+        this.botSelect.innerHTML = '<option value="">Error loading bots</option>';
+      }
+    }
   }
 
   /**
@@ -108,7 +164,7 @@ class WebsocketClientApp {
     if (!this.pcClient) return;
 
     // Listen for new tracks starting
-    this.pcClient.on(RTVIEvent.TrackStarted, (track, participant) => {
+    this.pcClient.on(RTVIEvent.TrackStarted, (track: any, participant: any) => {
       // Only handle non-local (bot) tracks
       if (!participant?.local && track.kind === 'audio') {
         this.setupAudioTrack(track);
@@ -116,7 +172,7 @@ class WebsocketClientApp {
     });
 
     // Listen for tracks stopping
-    this.pcClient.on(RTVIEvent.TrackStopped, (track, participant) => {
+    this.pcClient.on(RTVIEvent.TrackStopped, (track: any, participant: any) => {
       this.log(
         `Track stopped: ${track.kind} from ${participant?.name || 'unknown'}`
       );
@@ -164,18 +220,18 @@ class WebsocketClientApp {
             if (this.disconnectBtn) this.disconnectBtn.disabled = true;
             this.log('Client disconnected');
           },
-          onBotReady: (data) => {
+          onBotReady: (data: any) => {
             this.log(`Bot ready: ${JSON.stringify(data)}`);
             this.setupMediaTracks();
           },
-          onUserTranscript: (data) => {
+          onUserTranscript: (data: any) => {
             if (data.final) {
               this.log(`User: ${data.text}`);
             }
           },
-          onBotTranscript: (data) => this.log(`Bot: ${data.text}`),
-          onMessageError: (error) => console.error('Message error:', error),
-          onError: (error) => console.error('Error:', error),
+          onBotTranscript: (data: any) => this.log(`Bot: ${data.text}`),
+          onMessageError: (error: any) => console.error('Message error:', error),
+          onError: (error: any) => console.error('Error:', error),
         },
       };
       this.pcClient = new PipecatClient(PipecatConfig);
@@ -187,12 +243,19 @@ class WebsocketClientApp {
       await this.pcClient.initDevices();
 
       this.log('Connecting to bot...');
-      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:7860';
+      const serverUrl = window.location.origin;
       console.log('Connecting to server:', serverUrl);
+      
+      const selectedBot = this.botSelect?.value;
+      if (!selectedBot) {
+        throw new Error('Please select a bot first');
+      }
+      
+      this.log(`Connecting to bot: ${selectedBot}`);
       
       await this.pcClient.startBotAndConnect({
         // The baseURL and endpoint of your bot server that the client will connect to
-        endpoint: `${serverUrl}/connect`,
+        endpoint: `${serverUrl}/connect?bot=${selectedBot}`,
       });
 
       const timeTaken = Date.now() - startTime;

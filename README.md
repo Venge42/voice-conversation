@@ -1,54 +1,67 @@
-# Voice Agent
+# Voice Conversation Bot
 
-A Pipecat example demonstrating the simplest way to create a voice agent using `WebsocketTransport`.
+A voice conversation application with AI chatbot capabilities.
 
-## 🚀 Quick Start
+## Features
 
-### 1️⃣ Start the Bot Server
+- Real-time voice conversation with AI bots
+- Multiple bot configurations support
+- WebSocket-based communication
+- Voice activity detection
+- Audio streaming
 
-#### 🔧 Set Up the Environment
-1. Create and activate a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+## Bot Selection
 
-2. Install dependencies:
+The application now supports multiple bot configurations. Users can:
+
+1. Select from available bots using the dropdown menu
+2. Connect to the selected bot for voice conversation
+3. Switch between different bot personalities
+
+### Available Bots
+
+Currently, the following bots are available:
+- `bot1` - Default bot configuration
+- `bot2` - Alternative bot configuration
+
+## Setup
+
+1. Install dependencies:
    ```bash
    pip install -r requirements.txt
+   cd client && npm install
    ```
 
-3. Configure environment variables:
-   - Copy `env.example` to `.env`
+2. Set up environment variables (see `env.example`)
+
+3. Start the server:
    ```bash
-   cp env.example .env
+   python server.py
    ```
-   - Add your API keys
-   - Choose what do you wish to use, 'fast_api' or 'websocket_server'
 
-#### ▶️ Run the Server
-```bash
-python server/server.py
-```
+4. Start the client:
+   ```bash
+   cd client && npm run dev
+   ```
 
-### 3️⃣ Connect Using a Custom Client App
+5. Open your browser to `http://localhost:5173`
 
-For client-side setup, refer to the:
-- [Typescript Guide](client/README.md).
+## Usage
 
-## ⚠️ Important Note
-Ensure the bot server is running before using any client implementations.
+1. Select a bot from the dropdown menu
+2. Click "Connect" to establish a connection
+3. Allow microphone access when prompted
+4. Start speaking to interact with the bot
+5. Click "Disconnect" when finished
 
-## 📌 Requirements
+## API Endpoints
 
-- Python **3.10+**
-- Node.js **16+** (for JavaScript components)
-- Google API Key
+- `GET /bots` - Returns list of available bot configurations
+- `POST /connect` - Establishes WebSocket connection for voice chat
+- `WS /ws` - WebSocket endpoint for real-time communication
 
----
+## Development
 
-### 💡 Notes
-- Ensure all dependencies are installed before running the server.
-- Check the `.env` file for missing configurations.
-
-Happy coding! 🎉
+- Backend: Python with FastAPI and Pipecat
+- Frontend: TypeScript with Vite
+- Audio: WebRTC for real-time audio streaming

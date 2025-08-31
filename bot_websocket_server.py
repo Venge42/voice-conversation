@@ -58,15 +58,22 @@ async def run_bot_websocket_server():
             add_wav_header=False,
             vad_analyzer=SileroVADAnalyzer(),
             session_timeout=60 * 3,  # 3 minutes
+            port=8765,  # Use different port to avoid conflict with FastAPI
+            max_clients=10,  # Allow multiple concurrent connections
         )
     )
 
+    # We'll use a default bot configuration for now
+    # Individual bot configurations will be handled per connection
+    voice_id = "Puck"
+    system_instruction = SYSTEM_INSTRUCTION
+    print(f"Using default bot configuration: bot1, voice: {voice_id}")
+
     llm = GeminiMultimodalLiveLLMService(
         api_key=os.getenv("GOOGLE_API_KEY"),
-        # voice_id="Puck",  # Aoede, Charon, Fenrir, Kore, Puck
-        voice_id="Zephyr",
+        voice_id=voice_id,  # Aoede, Charon, Fenrir, Kore, Puck, Zephyr
         transcribe_model_audio=True,
-        system_instruction=SYSTEM_INSTRUCTION,
+        system_instruction=system_instruction,
         # model="models/gemini-2.5-flash-live-preview",
         model="models/gemini-2.5-flash-preview-native-audio-dialog",
         language="de-DE",

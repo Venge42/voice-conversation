@@ -54,7 +54,7 @@ SYSTEM_INSTRUCTION = create_enhanced_system_prompt(
 print_prompt_sizes(BASE_SYSTEM_INSTRUCTION, lore_content)
 
 
-async def run_bot(websocket_client):
+async def run_bot(websocket_client, bot_config=None, connection_id=None):
     ws_transport = FastAPIWebsocketTransport(
         websocket=websocket_client,
         params=FastAPIWebsocketParams(
@@ -66,12 +66,30 @@ async def run_bot(websocket_client):
         ),
     )
 
+    # Configure bot based on selection
+    if bot_config == "bot1":
+        voice_id = "Puck"
+        system_instruction = SYSTEM_INSTRUCTION
+    elif bot_config == "bot2":
+        voice_id = "Zephyr"
+        system_instruction = (
+            SYSTEM_INSTRUCTION
+            + "\n\nDu bist eine alternative Version des Kristallwesens mit einer anderen Stimme."
+        )
+    else:
+        voice_id = "Puck"
+        system_instruction = SYSTEM_INSTRUCTION
+
+    print(
+        f"Using bot configuration: {bot_config}, voice: {voice_id}, connection: {connection_id}"
+    )
+
     llm = GeminiMultimodalLiveLLMService(
         api_key=os.getenv("GOOGLE_API_KEY"),
-        voice_id="Puck",  # Aoede, Charon, Fenrir, Kore, Puck
+        voice_id=voice_id,  # Aoede, Charon, Fenrir, Kore, Puck, Zephyr
         transcribe_model_audio=True,
-        system_instruction=SYSTEM_INSTRUCTION,
-        model="gemini-1.5-flash",
+        system_instruction=system_instruction,
+        model="models/gemini-2.5-flash-preview-native-audio-dialog",  # Use the same model as websocket server
         language="de-DE",
     )
 

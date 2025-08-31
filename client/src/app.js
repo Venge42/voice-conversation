@@ -20,6 +20,7 @@ class WebsocketClientApp {
         this.disconnectBtn = null;
         this.statusSpan = null;
         this.debugLog = null;
+        this.botSelect = null;
         console.log('WebsocketClientApp');
         this.botAudio = document.createElement('audio');
         this.botAudio.autoplay = true;
@@ -36,6 +37,7 @@ class WebsocketClientApp {
         this.disconnectBtn = document.getElementById('disconnect-btn');
         this.statusSpan = document.getElementById('connection-status');
         this.debugLog = document.getElementById('debug-log');
+        this.botSelect = document.getElementById('bot-select');
     }
     /**
      * Set up event listeners for connect/disconnect buttons
@@ -43,6 +45,53 @@ class WebsocketClientApp {
     setupEventListeners() {
         this.connectBtn?.addEventListener('click', () => this.connect());
         this.disconnectBtn?.addEventListener('click', () => this.disconnect());
+        // Initially disable connect button until a bot is selected
+        if (this.connectBtn) {
+            this.connectBtn.disabled = true;
+        }
+        this.loadBots();
+    }
+    /**
+     * Fetch available bots from the server and populate the dropdown
+     */
+    async loadBots() {
+        try {
+            const serverUrl = window.location.origin;
+            const response = await fetch(`${serverUrl}/bots`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (this.botSelect) {
+                // Clear existing options
+                this.botSelect.innerHTML = '';
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Select a bot...';
+                this.botSelect.appendChild(defaultOption);
+                // Add bot options
+                data.bots.forEach((bot) => {
+                    const option = document.createElement('option');
+                    option.value = bot;
+                    option.textContent = bot;
+                    this.botSelect.appendChild(option);
+                });
+                // Add change listener to enable/disable connect button
+                this.botSelect.addEventListener('change', () => {
+                    if (this.connectBtn) {
+                        this.connectBtn.disabled = !this.botSelect?.value;
+                    }
+                });
+            }
+            this.log(`Loaded ${data.bots.length} bots`);
+        }
+        catch (error) {
+            this.log(`Error loading bots: ${error.message}`);
+            if (this.botSelect) {
+                this.botSelect.innerHTML = '<option value="">Error loading bots</option>';
+            }
+        }
     }
     /**
      * Add a timestamped message to the debug log
@@ -165,8 +214,13 @@ class WebsocketClientApp {
             this.log('Initializing devices...');
             await this.pcClient.initDevices();
             this.log('Connecting to bot...');
-            const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:7860';
+            const serverUrl = window.location.origin;
             console.log('Connecting to server:', serverUrl);
+            const selectedBot = this.botSelect?.value;
+            if (!selectedBot) {
+                throw new Error('Please select a bot first');
+            }
+            this.log(`Connecting to bot: ${selectedBot}`);
             await this.pcClient.startBotAndConnect({
                 // The baseURL and endpoint of your bot server that the client will connect to
                 endpoint: `${serverUrl}/connect`,
