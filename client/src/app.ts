@@ -239,14 +239,41 @@ class WebsocketClientApp {
    */
   private setupAudioTrack(track: MediaStreamTrack): void {
     this.log('Setting up audio track');
-    if (
-      this.botAudio.srcObject &&
-      'getAudioTracks' in this.botAudio.srcObject
-    ) {
-      const oldTrack = this.botAudio.srcObject.getAudioTracks()[0];
-      if (oldTrack?.id === track.id) return;
+    
+    try {
+      // Stop any existing audio tracks to prevent conflicts
+      if (
+        this.botAudio.srcObject &&
+        'getAudioTracks' in this.botAudio.srcObject
+      ) {
+        const oldTracks = this.botAudio.srcObject.getAudioTracks();
+        oldTracks.forEach(oldTrack => {
+          if (oldTrack.id !== track.id) {
+            oldTrack.stop();
+          }
+        });
+      }
+      
+      // Create new MediaStream with the track
+      const newStream = new MediaStream([track]);
+      this.botAudio.srcObject = newStream;
+      
+      // Add error handling for audio playback
+      this.botAudio.onerror = (error) => {
+        this.log(`Audio playback error: ${error}`);
+      };
+      
+      // Add event listeners for better debugging
+      this.botAudio.onloadstart = () => this.log('Audio loading started');
+      this.botAudio.oncanplay = () => this.log('Audio can start playing');
+      this.botAudio.onended = () => this.log('Audio playback ended');
+      
+      // Ensure audio is ready to play
+      this.botAudio.load();
+      
+    } catch (error) {
+      this.log(`Error setting up audio track: ${error}`);
     }
-    this.botAudio.srcObject = new MediaStream([track]);
   }
 
   /**
@@ -285,7 +312,11 @@ class WebsocketClientApp {
           },
           onBotTranscript: (data: any) => this.log(`Bot: ${data.text}`),
           onMessageError: (error: any) => console.error('Message error:', error),
-          onError: (error: any) => console.error('Error:', error),
+          onError: (error: any) => {
+            console.error('Error:', error);
+            this.log(`Connection error: ${error.message || error}`);
+            this.updateStatus('Error');
+          },
         },
       };
       this.pcClient = new PipecatClient(PipecatConfig);
@@ -307,9 +338,12 @@ class WebsocketClientApp {
       
       this.log(`Connecting to bot: ${selectedBot}`);
       
+      const endpoint = `${serverUrl}/connect?bot=${selectedBot}`;
+      this.log(`Using endpoint: ${endpoint}`);
+      
       await this.pcClient.startBotAndConnect({
         // The baseURL and endpoint of your bot server that the client will connect to
-        endpoint: `${serverUrl}/connect?bot=${selectedBot}`,
+        endpoint: endpoint,
       });
 
       const timeTaken = Date.now() - startTime;
@@ -334,17 +368,30 @@ class WebsocketClientApp {
   public async disconnect(): Promise<void> {
     if (this.pcClient) {
       try {
+        this.log('Disconnecting from bot...');
         await this.pcClient.disconnect();
         this.pcClient = null;
+        
+        // Clean up audio resources
         if (
           this.botAudio.srcObject &&
           'getAudioTracks' in this.botAudio.srcObject
         ) {
           this.botAudio.srcObject
             .getAudioTracks()
-            .forEach((track) => track.stop());
+            .forEach((track) => {
+              track.stop();
+              this.log('Audio track stopped');
+            });
           this.botAudio.srcObject = null;
         }
+        
+        // Reset audio element
+        this.botAudio.pause();
+        this.botAudio.currentTime = 0;
+        this.botAudio.src = '';
+        
+        this.log('Disconnection complete');
       } catch (error) {
         this.log(`Error disconnecting: ${(error as Error).message}`);
       }

@@ -64,8 +64,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         await run_bot(websocket, bot_config, connection_id)
+    except asyncio.CancelledError:
+        print(f"WebSocket connection cancelled for {connection_id}")
     except Exception as e:
-        print(f"Exception in run_bot: {e}")
+        print(f"Exception in run_bot for {connection_id}: {e}")
     finally:
         # Clean up connection when it's closed
         if connection_id in connection_bot_configs:
@@ -112,15 +114,17 @@ async def bot_connect(request: Request) -> Dict[Any, Any]:
 
     server_mode = os.getenv("WEBSOCKET_SERVER", "fast_api")
     server_url = os.getenv("SERVER_URL", "localhost:7860")
+
     if server_mode == "websocket_server":
         # In websocket_server mode, the websocket server runs on port 8765
-        ws_url = f"ws://localhost:8765"
+        ws_url = f"wss://localhost:8765"
     else:
         # In fast_api mode, use the FastAPI WebSocket endpoint
-        # Use wss:// for HTTPS and ws:// for HTTP
-        protocol = "wss" if server_url.startswith("https") else "ws"
-        ws_url = f"{protocol}://{server_url}/ws?bot={bot}"
+        # Always use wss:// for consistency
+        ws_url = f"wss://{server_url}/ws?bot={bot}"
 
+    print(f"Server mode: {server_mode}")
+    print(f"Server URL from env: {server_url}")
     print(f"Returning WebSocket URL: {ws_url} for bot: {bot}")
 
     return {"ws_url": ws_url}

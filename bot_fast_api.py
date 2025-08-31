@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: BSD 2-Clause License
 #
+import asyncio
 import os
 import sys
+import threading
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -31,8 +33,26 @@ from lore_loader import (
 
 load_dotenv(override=True)
 
-logger.remove(0)
-logger.add(sys.stderr, level="DEBUG")
+# Configure logging to prevent conflicts
+logger.remove()
+logger.add(
+    sys.stderr,
+    level="INFO",
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+    enqueue=True,  # Thread-safe logging
+    backtrace=True,
+    diagnose=True,
+)
+
+# Thread-local storage for connection-specific logging
+thread_local = threading.local()
+
+
+def get_connection_logger(connection_id: str = None):
+    """Get a logger instance for a specific connection to prevent log scrambling."""
+    if not hasattr(thread_local, "logger"):
+        thread_local.logger = logger.bind(connection=connection_id or "unknown")
+    return thread_local.logger
 
 
 # Load lore files and create enhanced system prompt
@@ -110,86 +130,111 @@ def get_bot_voice_id(bot_config: str) -> str:
 
 
 async def run_bot(websocket_client, bot_config=None, connection_id=None):
-    ws_transport = FastAPIWebsocketTransport(
-        websocket=websocket_client,
-        params=FastAPIWebsocketParams(
-            audio_in_enabled=True,
-            audio_out_enabled=True,
-            add_wav_header=False,
-            vad_analyzer=SileroVADAnalyzer(),
-            serializer=ProtobufFrameSerializer(),
-        ),
-    )
+    # Get connection-specific logger
+    conn_logger = get_connection_logger(connection_id)
 
-    # Load bot configuration dynamically
-    bot_lore = load_bot_lore(bot_config) if bot_config else lore_content
-    voice_id = get_bot_voice_id(bot_config) if bot_config else "Puck"
-    system_instruction = create_enhanced_system_prompt(
-        BASE_SYSTEM_INSTRUCTION, bot_lore
-    )
+    try:
+        conn_logger.info(
+            f"Starting bot session for config: {bot_config}, connection: {connection_id}"
+        )
 
-    print(
-        f"Using bot configuration: {bot_config}, voice: {voice_id}, connection: {connection_id}"
-    )
+        ws_transport = FastAPIWebsocketTransport(
+            websocket=websocket_client,
+            params=FastAPIWebsocketParams(
+                audio_in_enabled=True,
+                audio_out_enabled=True,
+                add_wav_header=False,
+                vad_analyzer=SileroVADAnalyzer(),
+                serializer=ProtobufFrameSerializer(),
+            ),
+        )
 
-    llm = GeminiMultimodalLiveLLMService(
-        api_key=os.getenv("GOOGLE_API_KEY"),
-        voice_id=voice_id,  # Aoede, Charon, Fenrir, Kore, Puck, Zephyr
-        transcribe_model_audio=True,
-        system_instruction=system_instruction,
-        model="models/gemini-2.5-flash-preview-native-audio-dialog",  # Use the same model as websocket server
-        language="de-DE",
-    )
+        # Load bot configuration dynamically
+        bot_lore = load_bot_lore(bot_config) if bot_config else lore_content
+        voice_id = get_bot_voice_id(bot_config) if bot_config else "Puck"
+        system_instruction = create_enhanced_system_prompt(
+            BASE_SYSTEM_INSTRUCTION, bot_lore
+        )
 
-    context = OpenAILLMContext(
-        [
-            {
-                "role": "user",
-                "content": "Begrüße den Benutzer herzlich und stelle dich vor.",
-            }
-        ],
-    )
-    context_aggregator = llm.create_context_aggregator(context)
+        conn_logger.info(
+            f"Bot configuration loaded - voice: {voice_id}, lore size: {len(bot_lore)} chars"
+        )
 
-    # RTVI events for Pipecat client UI
-    rtvi = RTVIProcessor(config=RTVIConfig(config=[]))
+        llm = GeminiMultimodalLiveLLMService(
+            api_key=os.getenv("GOOGLE_API_KEY"),
+            voice_id=voice_id,  # Aoede, Charon, Fenrir, Kore, Puck, Zephyr
+            transcribe_model_audio=True,
+            system_instruction=system_instruction,
+            model="models/gemini-2.5-flash-preview-native-audio-dialog",  # Use the same model as websocket server
+            language="de-DE",
+        )
 
-    pipeline = Pipeline(
-        [
-            ws_transport.input(),
-            context_aggregator.user(),
-            rtvi,
-            llm,  # LLM
-            ws_transport.output(),
-            context_aggregator.assistant(),
-        ]
-    )
+        context = OpenAILLMContext(
+            [
+                {
+                    "role": "user",
+                    "content": "Begrüße den Benutzer herzlich und stelle dich vor.",
+                }
+            ],
+        )
+        context_aggregator = llm.create_context_aggregator(context)
 
-    task = PipelineTask(
-        pipeline,
-        params=PipelineParams(
-            enable_metrics=True,
-            enable_usage_metrics=True,
-        ),
-        observers=[RTVIObserver(rtvi)],
-    )
+        # RTVI events for Pipecat client UI
+        rtvi = RTVIProcessor(config=RTVIConfig(config=[]))
 
-    @rtvi.event_handler("on_client_ready")
-    async def on_client_ready(rtvi):
-        logger.info("Pipecat client ready.")
-        await rtvi.set_bot_ready()
-        # Kick off the conversation.
-        await task.queue_frames([LLMRunFrame()])
+        pipeline = Pipeline(
+            [
+                ws_transport.input(),
+                context_aggregator.user(),
+                rtvi,
+                llm,  # LLM
+                ws_transport.output(),
+                context_aggregator.assistant(),
+            ]
+        )
 
-    @ws_transport.event_handler("on_client_connected")
-    async def on_client_connected(transport, client):
-        logger.info("Pipecat Client connected")
+        task = PipelineTask(
+            pipeline,
+            params=PipelineParams(
+                enable_metrics=True,
+                enable_usage_metrics=True,
+            ),
+            observers=[RTVIObserver(rtvi)],
+        )
 
-    @ws_transport.event_handler("on_client_disconnected")
-    async def on_client_disconnected(transport, client):
-        logger.info("Pipecat Client disconnected")
-        await task.cancel()
+        @rtvi.event_handler("on_client_ready")
+        async def on_client_ready(rtvi):
+            conn_logger.info("Pipecat client ready - starting conversation")
+            await rtvi.set_bot_ready()
+            # Kick off the conversation.
+            await task.queue_frames([LLMRunFrame()])
 
-    runner = PipelineRunner(handle_sigint=False)
+        @ws_transport.event_handler("on_client_connected")
+        async def on_client_connected(transport, client):
+            conn_logger.info("Pipecat Client connected")
 
-    await runner.run(task)
+        @ws_transport.event_handler("on_client_disconnected")
+        async def on_client_disconnected(transport, client):
+            conn_logger.info("Pipecat Client disconnected - cleaning up")
+            try:
+                await task.cancel()
+            except Exception as e:
+                conn_logger.error(f"Error during task cancellation: {e}")
+
+        @ws_transport.event_handler("on_error")
+        async def on_transport_error(transport, error):
+            conn_logger.error(f"Transport error: {error}")
+
+        runner = PipelineRunner(handle_sigint=False)
+
+        conn_logger.info("Starting pipeline runner")
+        await runner.run(task)
+
+    except asyncio.CancelledError:
+        conn_logger.info("Bot session cancelled")
+        raise
+    except Exception as e:
+        conn_logger.error(f"Unexpected error in run_bot: {e}")
+        raise
+    finally:
+        conn_logger.info("Bot session cleanup complete")

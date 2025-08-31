@@ -10,7 +10,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.7
       - key: WEBSOCKET_SERVER
-        value: websocket_server
+        value: fast_api
       - key: SERVER_URL
         value: voice-conversation-server.onrender.com
       - key: GOOGLE_API_KEY
