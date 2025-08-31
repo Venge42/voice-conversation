@@ -20,7 +20,6 @@ services:
   - type: web
     name: voice-conversation-client
     env: static
-    plan: starter
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: client/dist
     envVars:
