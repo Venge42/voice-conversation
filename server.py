@@ -74,8 +74,22 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.get("/bots")
 async def get_bots() -> Dict[str, list[str]]:
-    """Return a list of available bot configurations."""
-    return {"bots": ["bot1", "bot2"]}
+    """Return a list of available bot configurations from the lore/bots directory."""
+    import os
+    from pathlib import Path
+
+    bots_dir = Path("lore/bots")
+    if not bots_dir.exists():
+        # Fallback to hardcoded list if directory doesn't exist
+        return {"bots": ["bot1", "bot2"]}
+
+    # Get all subdirectories in lore/bots/
+    bot_dirs = [d.name for d in bots_dir.iterdir() if d.is_dir()]
+
+    # Sort for consistent ordering
+    bot_dirs.sort()
+
+    return {"bots": bot_dirs}
 
 
 from pydantic import BaseModel
@@ -97,7 +111,6 @@ async def bot_connect(request: Request) -> Dict[Any, Any]:
 
     server_mode = os.getenv("WEBSOCKET_SERVER", "fast_api")
     server_url = os.getenv("SERVER_URL", "localhost:7860")
-    print(f"DEBUG: server_mode={server_mode}, server_url={server_url}")
     if server_mode == "websocket_server":
         # In websocket_server mode, the websocket server runs on port 8765
         ws_url = f"ws://localhost:8765"

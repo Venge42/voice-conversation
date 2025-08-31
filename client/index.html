@@ -1,40 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Chatbot</title>
+  <title>Inseln der Macht - Mystische Stimmen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 </head>
 
 <body>
-<div class="container">
-  <div class="status-bar">
-    <div class="status">
-      Transport: <span id="connection-status">Disconnected</span>
-    </div>
-    <div class="bot-selection">
-      <label for="bot-select">Bot:</label>
-      <select id="bot-select">
-        <option value="">Loading bots...</option>
-      </select>
-    </div>
-    <div class="controls">
-      <button id="connect-btn">Connect</button>
-      <button id="disconnect-btn" disabled>Disconnect</button>
-    </div>
+  <div class="mystical-background">
+    <div class="floating-particles"></div>
+    <div class="floating-particles"></div>
+    <div class="floating-particles"></div>
+  </div>
+
+  <div class="container">
+    <header class="fantasy-header">
+      <div class="logo-section">
+        <div class="illusion-larp-logo">
+          <h1>ILLUSION-LARP e.V.</h1>
+          <div class="logo-divider"></div>
+        </div>
+        <div class="inseln-logo">
+          <h2>Inseln der Macht</h2>
+          <p class="subtitle">Mystische Stimmen der Dimensionen</p>
+        </div>
+      </div>
+      <div class="header-ornament">
+        <div class="crystal-ornament"></div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="portal-container">
+        <div class="portal-frame">
+          <div class="portal-glow"></div>
+          <div class="portal-content">
+            <h3 class="portal-title">Portal der Kommunikation</h3>
+            <p class="portal-description">Wähle einen mystischen Bot und beginne deine Reise durch die Dimensionen</p>
+            
+            <div class="bot-selection-section">
+              <div class="selection-container">
+                <label for="bot-select" class="fantasy-label">Wähle deinen mystischen Begleiter:</label>
+                <div class="select-wrapper">
+                  <select id="bot-select" class="fantasy-select">
+                    <option value="">Lade mystische Wesen...</option>
+                  </select>
+                  <div class="select-arrow"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="connection-controls">
+              <button id="connect-btn" class="fantasy-button connect-btn">
+                <span class="button-text">Portal öffnen</span>
+                <div class="button-glow"></div>
+              </button>
+              <button id="disconnect-btn" class="fantasy-button disconnect-btn" disabled>
+                <span class="button-text">Portal schließen</span>
+                <div class="button-glow"></div>
+              </button>
+            </div>
+
+            <div class="status-display">
+              <div class="status-indicator">
+                <span class="status-label">Status:</span>
+                <span id="connection-status" class="status-value">Nicht verbunden</span>
+                <div class="status-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="communication-log">
+        <div class="log-header">
+          <h3>Chronik der Kommunikation</h3>
+          <div class="log-ornament"></div>
+        </div>
+        <div id="debug-log" class="log-content"></div>
+      </div>
+    </main>
+
+    <footer class="fantasy-footer">
+      <div class="footer-content">
+        <p>&copy; 2024 Illusion-LARP e.V. - Inseln der Macht</p>
+        <p>Mystische Technologie für fantastische Abenteuer</p>
+      </div>
+    </footer>
   </div>
 
   <audio id="bot-audio" autoplay></audio>
 
-  <div class="debug-panel">
-    <h3>Debug Info</h3>
-    <div id="debug-log"></div>
-  </div>
-</div>
-
-<script type="module" src="/src/app.ts"></script>
-<link rel="stylesheet" href="/src/style.css">
+  <script type="module" src="/src/app.ts"></script>
+  <link rel="stylesheet" href="/src/style.css">
 </body>
 
 </html>

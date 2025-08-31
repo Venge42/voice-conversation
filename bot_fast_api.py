@@ -5,6 +5,7 @@
 #
 import os
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -54,6 +55,60 @@ SYSTEM_INSTRUCTION = create_enhanced_system_prompt(
 print_prompt_sizes(BASE_SYSTEM_INSTRUCTION, lore_content)
 
 
+def load_bot_lore(bot_config: str) -> str:
+    """Load lore files specific to a bot configuration, combining general lore and bot-specific lore."""
+    from lore_loader import load_lore_files
+
+    # Start with the general lore from lore/ directory
+    general_lore = load_lore_files()
+
+    bot_dir = Path(f"lore/bots/{bot_config}")
+    if not bot_dir.exists():
+        print(f"Warning: Bot directory {bot_dir} not found, using only general lore")
+        return general_lore
+
+    # Load lore files from the specific bot directory
+    bot_lore_content = ""
+    for txt_file in bot_dir.glob("*.txt"):
+        try:
+            with open(txt_file, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                bot_lore_content += f"\n=== {txt_file.name} ===\n{content}\n"
+                print(f"   ✅ {txt_file.name:<25} | {len(content):>6} chars")
+        except Exception as e:
+            print(f"   ❌ {txt_file.name:<25} | Error: {e}")
+
+    if not bot_lore_content:
+        print(
+            f"Warning: No bot-specific lore files found in {bot_dir}, using only general lore"
+        )
+        return general_lore
+
+    # Combine general lore and bot-specific lore
+    combined_lore = general_lore + "\n" + bot_lore_content
+    return combined_lore
+
+
+def get_bot_voice_id(bot_config: str) -> str:
+    """Get the voice ID for a bot from its config file."""
+    import json
+
+    config_file = Path(f"lore/bots/{bot_config}/config.json")
+    if not config_file.exists():
+        print(f"Warning: Config file {config_file} not found, using default voice_id")
+        return bot_config  # Use directory name as voice_id
+
+    try:
+        with open(config_file, "r", encoding="utf-8") as f:
+            config = json.load(f)
+            voice_id = config.get("voice_id", bot_config)
+            print(f"Loaded voice_id '{voice_id}' for bot '{bot_config}'")
+            return voice_id
+    except Exception as e:
+        print(f"Error loading config for {bot_config}: {e}")
+        return bot_config  # Use directory name as fallback
+
+
 async def run_bot(websocket_client, bot_config=None, connection_id=None):
     ws_transport = FastAPIWebsocketTransport(
         websocket=websocket_client,
@@ -66,19 +121,12 @@ async def run_bot(websocket_client, bot_config=None, connection_id=None):
         ),
     )
 
-    # Configure bot based on selection
-    if bot_config == "bot1":
-        voice_id = "Puck"
-        system_instruction = SYSTEM_INSTRUCTION
-    elif bot_config == "bot2":
-        voice_id = "Zephyr"
-        system_instruction = (
-            SYSTEM_INSTRUCTION
-            + "\n\nDu bist eine alternative Version des Kristallwesens mit einer anderen Stimme."
-        )
-    else:
-        voice_id = "Puck"
-        system_instruction = SYSTEM_INSTRUCTION
+    # Load bot configuration dynamically
+    bot_lore = load_bot_lore(bot_config) if bot_config else lore_content
+    voice_id = get_bot_voice_id(bot_config) if bot_config else "Puck"
+    system_instruction = create_enhanced_system_prompt(
+        BASE_SYSTEM_INSTRUCTION, bot_lore
+    )
 
     print(
         f"Using bot configuration: {bot_config}, voice: {voice_id}, connection: {connection_id}"

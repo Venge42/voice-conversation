@@ -89,7 +89,7 @@ class WebsocketClientApp {
         // Add default option
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
-        defaultOption.textContent = 'Select a bot...';
+        defaultOption.textContent = 'Wähle ein mystisches Wesen...';
         this.botSelect.appendChild(defaultOption);
         
         // Add bot options
@@ -112,7 +112,7 @@ class WebsocketClientApp {
     } catch (error) {
       this.log(`Error loading bots: ${(error as Error).message}`);
       if (this.botSelect) {
-        this.botSelect.innerHTML = '<option value="">Error loading bots</option>';
+        this.botSelect.innerHTML = '<option value="">Fehler beim Laden der mystischen Wesen</option>';
       }
     }
   }
@@ -123,12 +123,48 @@ class WebsocketClientApp {
   private log(message: string): void {
     if (!this.debugLog) return;
     const entry = document.createElement('div');
-    entry.textContent = `${new Date().toISOString()} - ${message}`;
+    
+    // Format timestamp in German style
+    const now = new Date();
+    const timestamp = now.toLocaleString('de-DE', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    
+    // Translate and style messages
+    let displayMessage = message;
+    let messageClass = '';
+    
     if (message.startsWith('User: ')) {
-      entry.style.color = '#2196F3';
+      displayMessage = `👤 Benutzer: ${message.substring(6)}`;
+      messageClass = 'user-message';
     } else if (message.startsWith('Bot: ')) {
-      entry.style.color = '#4CAF50';
+      displayMessage = `🤖 Mystisches Wesen: ${message.substring(5)}`;
+      messageClass = 'bot-message';
+    } else if (message.includes('Connected')) {
+      displayMessage = `🔗 Portal geöffnet - Verbindung hergestellt`;
+      messageClass = 'success-message';
+    } else if (message.includes('Disconnected')) {
+      displayMessage = `❌ Portal geschlossen - Verbindung getrennt`;
+      messageClass = 'error-message';
+    } else if (message.includes('Error')) {
+      displayMessage = `⚠️ Fehler: ${message}`;
+      messageClass = 'error-message';
+    } else if (message.includes('Bot ready')) {
+      displayMessage = `✨ Mystisches Wesen bereit für Kommunikation`;
+      messageClass = 'success-message';
+    } else if (message.includes('Loading bots')) {
+      displayMessage = `📚 Lade mystische Wesen...`;
+      messageClass = 'info-message';
+    } else if (message.includes('Loaded')) {
+      displayMessage = `📖 ${message.replace('Loaded', 'Geladen:')} mystische Wesen verfügbar`;
+      messageClass = 'info-message';
     }
+    
+    entry.textContent = `[${timestamp}] ${displayMessage}`;
+    entry.className = messageClass;
+    
     this.debugLog.appendChild(entry);
     this.debugLog.scrollTop = this.debugLog.scrollHeight;
     console.log(message);
@@ -139,7 +175,23 @@ class WebsocketClientApp {
    */
   private updateStatus(status: string): void {
     if (this.statusSpan) {
-      this.statusSpan.textContent = status;
+      // Translate status messages to German
+      let germanStatus = status;
+      switch (status) {
+        case 'Connected':
+          germanStatus = 'Verbunden';
+          break;
+        case 'Disconnected':
+          germanStatus = 'Nicht verbunden';
+          break;
+        case 'Error':
+          germanStatus = 'Fehler';
+          break;
+        case 'Connecting':
+          germanStatus = 'Verbinde...';
+          break;
+      }
+      this.statusSpan.textContent = germanStatus;
     }
     this.log(`Status: ${status}`);
   }
@@ -248,7 +300,7 @@ class WebsocketClientApp {
       
       const selectedBot = this.botSelect?.value;
       if (!selectedBot) {
-        throw new Error('Please select a bot first');
+        throw new Error('Bitte wähle zuerst ein mystisches Wesen aus');
       }
       
       this.log(`Connecting to bot: ${selectedBot}`);
