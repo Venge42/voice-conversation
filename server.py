@@ -114,14 +114,17 @@ async def bot_connect(request: Request) -> Dict[Any, Any]:
 
     server_mode = os.getenv("WEBSOCKET_SERVER", "fast_api")
     server_url = os.getenv("SERVER_URL", "localhost:7860")
+    ws_protocol = os.getenv("WS_PROTOCOL", "wss")
+    print(f"Server URL: {server_url}")
+    print(f"WebSocket protocol: {ws_protocol}")
 
     if server_mode == "websocket_server":
         # In websocket_server mode, the websocket server runs on port 8765
-        ws_url = f"wss://localhost:8765"
+        ws_url = f"{ws_protocol}://localhost:8765"
     else:
         # In fast_api mode, use the FastAPI WebSocket endpoint
         # Always use wss:// for consistency
-        ws_url = f"wss://{server_url}/ws?bot={bot}"
+        ws_url = f"{ws_protocol}://{server_url}/ws?bot={bot}"
 
     print(f"Server mode: {server_mode}")
     print(f"Server URL from env: {server_url}")
