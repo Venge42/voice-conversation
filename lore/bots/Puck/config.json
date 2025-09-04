@@ -1,5 +1,18 @@
 {
   "voice_id": "Puck",
   "description": "Kristall Wesen - ein mystisches, kristallines Wesen",
-  "personality": "emotional, verwirrt, wissenschaftlich, sarkastisch"
+  "personality": "emotional, verwirrt, wissenschaftlich, sarkastisch",
+  "light_config": {
+    "primary_color": {"r": 0.8, "g": 0.2, "b": 1.0, "a": 1.0},
+    "fade_to_color": {"r": 1.0, "g": 0.4, "b": 0.6, "a": 1.0},
+    "off_color": {"r": 0.0, "g": 0.0, "b": 0.0, "a": 0.0},
+    "variation_intensity": 0.3,
+    "color_shift_speed": 2.0,
+    "pulse_intensity": 0.2,
+    "pulse_speed": 1.5,
+    "breathing_effect": true,
+    "breathing_speed": 0.8,
+    "breathing_intensity": 0.15,
+    "shelly_ip": "192.168.2.77"
+  }
 }

@@ -40,9 +40,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Store bot configurations per connection
-connection_bot_configs = {}
+from state import *
 
 
 @app.websocket("/ws")
@@ -52,27 +50,90 @@ async def websocket_endpoint(websocket: WebSocket):
     # Get bot from query parameters
     bot_config = websocket.query_params.get("bot", "bot1")
 
-    # Use the WebSocket client address as connection ID
-    connection_id = f"{websocket.client.host}:{websocket.client.port}"
+    # Generate a unique session ID for this bot session
+    session_id = f"{bot_config}_{uuid.uuid4().hex[:8]}"
 
-    # Store the bot configuration for this connection
-    connection_bot_configs[connection_id] = bot_config
+    # Store the bot configuration for this session
+    connection_bot_configs[session_id] = bot_config
+
+    print(f"WebSocket connection accepted for bot: {bot_config}, session: {session_id}")
+
+    # Store the session ID in the websocket object for later use
+    websocket.session_id = session_id
+
+    try:
+        await run_bot(websocket, bot_config, session_id, connection_light_controllers)
+    except asyncio.CancelledError:
+        print(f"WebSocket connection cancelled for {session_id}")
+    except Exception as e:
+        print(f"Exception in run_bot for {session_id}: {e}")
+    finally:
+        # Clean up connection when it's closed
+        if session_id in connection_bot_configs:
+            del connection_bot_configs[session_id]
+        if session_id in connection_light_controllers:
+            del connection_light_controllers[session_id]
+        print(f"Cleaned up connection: {session_id}")
+
+
+@app.websocket("/light-ws")
+async def light_websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+
+    # Get bot from query parameters
+    bot_config = websocket.query_params.get("bot", "bot1")
+
+    # Find the most recent session ID for this bot (voice WebSocket should be created first)
+    session_id = None
+    for sid, bot in list(connection_bot_configs.items())[
+        ::-1
+    ]:  # Reverse to get most recent first
+        if bot == bot_config:
+            session_id = sid
+            break
+
+    if not session_id:
+        # If no matching session found, reject the connection
+        print(
+            f"❌ No voice WebSocket session found for {bot_config}, rejecting light WebSocket"
+        )
+        await websocket.close(code=1000, reason="No voice session available")
+        return
+    else:
+        print(f"🔌 Found existing session ID for light WebSocket: {session_id}")
+
+    # Store the light WebSocket connection using the session ID
+    light_websocket_connections[session_id] = websocket
 
     print(
-        f"WebSocket connection accepted for bot: {bot_config}, connection: {connection_id}"
+        f"🔌 Light WebSocket connection accepted for bot: {bot_config}, session: {session_id}"
     )
 
     try:
-        await run_bot(websocket, bot_config, connection_id)
-    except asyncio.CancelledError:
-        print(f"WebSocket connection cancelled for {connection_id}")
+        # Keep connection alive and forward light commands
+        while True:
+            # Just sleep to keep the connection alive
+            await asyncio.sleep(1)
+
+            # Check if the WebSocket is still connected
+            if websocket.client_state.value != 1:  # 1 = CONNECTED
+                print(f"🔌 Light WebSocket {session_id} disconnected, breaking loop")
+                break
+
     except Exception as e:
-        print(f"Exception in run_bot for {connection_id}: {e}")
+        print(f"Light WebSocket connection closed for {session_id}: {e}")
     finally:
-        # Clean up connection when it's closed
-        if connection_id in connection_bot_configs:
-            del connection_bot_configs[connection_id]
-            print(f"Cleaned up connection: {connection_id}")
+        # Clean up the connection
+        if session_id in light_websocket_connections:
+            del light_websocket_connections[session_id]
+            print(f"🔌 Light WebSocket connection cleaned up: {session_id}")
+            print(
+                f"🔌 Remaining light connections: {list(light_websocket_connections.keys())}"
+            )
+        else:
+            print(
+                f"🔌 Light WebSocket connection {session_id} not found in dictionary during cleanup"
+            )
 
 
 @app.get("/bots")
@@ -102,19 +163,33 @@ class ConnectRequest(BaseModel):
     bot: str
 
 
-@app.post("/connect")
+@app.api_route("/connect", methods=["GET", "POST"])
 async def bot_connect(request: Request) -> Dict[Any, Any]:
-    # Try to get bot from JSON body first
-    try:
-        body = await request.json()
-        bot = body.get("bot", "bot1")
-    except:
-        # Fallback to query parameter
+    # Support both POST (JSON body) and GET (query param)
+    bot = "bot1"
+    if request.method == "POST":
+        try:
+            body = await request.json()
+            bot = body.get("bot", "bot1")
+        except Exception:
+            # Fall back to query parameter if no/invalid JSON
+            bot = request.query_params.get("bot", "bot1")
+    else:
         bot = request.query_params.get("bot", "bot1")
 
     server_mode = os.getenv("WEBSOCKET_SERVER", "fast_api")
     server_url = os.getenv("SERVER_URL", "localhost:7860")
-    ws_protocol = os.getenv("WS_PROTOCOL", "wss")
+
+    # Choose ws/wss intelligently if not explicitly set
+    env_ws_protocol = os.getenv("WS_PROTOCOL")
+    if env_ws_protocol:
+        ws_protocol = env_ws_protocol
+    else:
+        # Default to ws for localhost, wss otherwise
+        if "localhost" in server_url or "127.0.0.1" in server_url:
+            ws_protocol = "ws"
+        else:
+            ws_protocol = "wss"
     print(f"Server URL: {server_url}")
     print(f"WebSocket protocol: {ws_protocol}")
 
@@ -131,6 +206,27 @@ async def bot_connect(request: Request) -> Dict[Any, Any]:
     print(f"Returning WebSocket URL: {ws_url} for bot: {bot}")
 
     return {"ws_url": ws_url}
+
+
+@app.get("/light-status")
+async def get_light_status() -> Dict[str, Any]:
+    """Get the status of all active light controllers."""
+    return {
+        "active_connections": len(connection_light_controllers),
+        "connections": {
+            conn_id: controller.get_status()
+            for conn_id, controller in connection_light_controllers.items()
+        },
+    }
+
+
+@app.get("/light-status/{connection_id}")
+async def get_connection_light_status(connection_id: str) -> Dict[str, Any]:
+    """Get the light status for a specific connection."""
+    if connection_id not in connection_light_controllers:
+        return {"error": "Connection not found"}
+
+    return connection_light_controllers[connection_id].get_status()
 
 
 async def main():

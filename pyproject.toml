@@ -11,7 +11,7 @@ dependencies = [
     "python-dotenv",
     "fastapi[all]",
     "uvicorn",
-    "pipecat-ai[silero,websocket,google]>=0.0.82",
+    "pipecat-ai[google,silero,websocket,whisper]>=0.0.36",
     "pyaudio>=0.2.11",
     "numpy>=1.24.0",
 ]

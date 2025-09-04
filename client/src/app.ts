@@ -19,6 +19,7 @@ import {
   RTVIEvent,
 } from '@pipecat-ai/client-js';
 import { WebSocketTransport } from '@pipecat-ai/websocket-transport';
+import { CrystalLightController } from './light_controller';
 
 class WebsocketClientApp {
   private pcClient: PipecatClient | null = null;
@@ -28,6 +29,14 @@ class WebsocketClientApp {
   private debugLog: HTMLElement | null = null;
   private botSelect: HTMLSelectElement | null = null;
   private botAudio: HTMLAudioElement;
+  private lightController: CrystalLightController;
+  private lightWebSocket: WebSocket | null = null;
+  private lastServerUrl: string = '';
+  private lightAnimationInterval: NodeJS.Timeout | null = null;
+  private currentDisplayedColor: any = { r: 0, g: 0, b: 0, a: 0 };
+  private shellyAvailable: boolean = true;
+  private shellyErrorCount: number = 0;
+  private readonly MAX_SHELLY_ERRORS: number = 3;
 
   constructor() {
     console.log('WebsocketClientApp');
@@ -36,8 +45,15 @@ class WebsocketClientApp {
     //this.botAudio.playsInline = true;
     document.body.appendChild(this.botAudio);
 
+    // Initialize light controller
+    this.lightController = new CrystalLightController();
+    this.lightController.setDebugMode(true);
+
     this.setupDOMElements();
     this.setupEventListeners();
+    
+    // Initialize color display with default black
+    this.updateColorDisplay({ r: 0, g: 0, b: 0, a: 0 });
   }
 
   /**
@@ -67,7 +83,37 @@ class WebsocketClientApp {
       this.connectBtn.disabled = true;
     }
     
+    // Set up light control event listeners
+    this.setupLightControlEventListeners();
+    
     this.loadBots();
+  }
+
+  /**
+   * Set up light control event listeners
+   */
+  private setupLightControlEventListeners(): void {
+    // Light control test buttons
+    const testRedBtn = document.getElementById('test-red');
+    const testGreenBtn = document.getElementById('test-green');
+    const testBlueBtn = document.getElementById('test-blue');
+    const testOffBtn = document.getElementById('test-off');
+
+    if (testRedBtn) {
+      testRedBtn.addEventListener('click', () => this.testLightColor({ r: 1, g: 0, b: 0, a: 1 }));
+    }
+
+    if (testGreenBtn) {
+      testGreenBtn.addEventListener('click', () => this.testLightColor({ r: 0, g: 1, b: 0, a: 1 }));
+    }
+
+    if (testBlueBtn) {
+      testBlueBtn.addEventListener('click', () => this.testLightColor({ r: 0, g: 0, b: 1, a: 1 }));
+    }
+
+    if (testOffBtn) {
+      testOffBtn.addEventListener('click', () => this.testLightOff());
+    }
   }
 
   /**
@@ -75,7 +121,7 @@ class WebsocketClientApp {
    */
   private async loadBots(): Promise<void> {
     try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL || window.location.origin;
+      const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:7860';
       console.log('Environment VITE_SERVER_URL:', import.meta.env.VITE_SERVER_URL);
       console.log('Using server URL:', serverUrl);
       const response = await fetch(`${serverUrl}/bots`);
@@ -116,6 +162,69 @@ class WebsocketClientApp {
       if (this.botSelect) {
         this.botSelect.innerHTML = '<option value="">Fehler beim Laden der mystischen Wesen</option>';
       }
+    }
+  }
+
+  /**
+   * Test light with a specific color
+   */
+  private async testLightColor(color: { r: number; g: number; b: number; a: number }): Promise<void> {
+    this.log(`🧪 Testing light color: RGB(${color.r}, ${color.g}, ${color.b})`);
+    await this.lightController.testColor(color);
+    this.updateColorDisplay(color);
+  }
+
+  /**
+   * Test turning off lights
+   */
+  private async testLightOff(): Promise<void> {
+    this.log('🔇 Testing light off');
+    await this.lightController.turnOff();
+    this.updateColorDisplay({ r: 0, g: 0, b: 0, a: 0 });
+  }
+
+  /**
+   * Update color display with current color values
+   */
+  private updateColorDisplay(color: { r: number; g: number; b: number; a: number }): void {
+    // Store the current displayed color for fade transitions
+    this.currentDisplayedColor = { ...color };
+    
+    // Update color preview circle
+    const colorPreview = document.getElementById('color-preview');
+    if (colorPreview) {
+      const r = Math.round(color.r * 255);
+      const g = Math.round(color.g * 255);
+      const b = Math.round(color.b * 255);
+      const a = Math.round(color.a * 255);
+      
+      // Apply color to preview circle
+      colorPreview.style.background = `rgba(${r}, ${g}, ${b}, ${a})`;
+      
+      // Add glow effect based on intensity
+      const intensity = Math.max(r, g, b) / 255;
+      colorPreview.style.boxShadow = `0 0 ${15 + intensity * 10}px rgba(${r}, ${g}, ${b}, ${a * 0.8})`;
+    }
+
+    // Update RGB values
+    const redValue = document.getElementById('red-value');
+    const greenValue = document.getElementById('green-value');
+    const blueValue = document.getElementById('blue-value');
+    const alphaValue = document.getElementById('alpha-value');
+    
+    if (redValue) redValue.textContent = Math.round(color.r * 255).toString();
+    if (greenValue) greenValue.textContent = Math.round(color.g * 255).toString();
+    if (blueValue) blueValue.textContent = Math.round(color.b * 255).toString();
+    if (alphaValue) alphaValue.textContent = Math.round(color.a * 255).toString();
+
+    // Update HEX value
+    const hexValue = document.getElementById('hex-value');
+    if (hexValue) {
+      const r = Math.round(color.r * 255);
+      const g = Math.round(color.g * 255);
+      const b = Math.round(color.b * 255);
+      const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+      hexValue.textContent = hex;
     }
   }
 
@@ -282,6 +391,9 @@ class WebsocketClientApp {
    */
   public async connect(): Promise<void> {
     try {
+      // Reset client state for clean connection
+      this.resetClientState();
+      
       const startTime = Date.now();
 
       //const transport = new DailyTransport();
@@ -304,6 +416,11 @@ class WebsocketClientApp {
           onBotReady: (data: any) => {
             this.log(`Bot ready: ${JSON.stringify(data)}`);
             this.setupMediaTracks();
+            
+            // Set up light control WebSocket after bot is ready
+            this.setupLightControlWebSocket().catch(error => {
+              this.log(`❌ Error setting up light control: ${error}`);
+            });
           },
           onUserTranscript: (data: any) => {
             if (data.final) {
@@ -328,8 +445,9 @@ class WebsocketClientApp {
       await this.pcClient.initDevices();
 
       this.log('Connecting to bot...');
-      const serverUrl = import.meta.env.VITE_SERVER_URL || window.location.origin;
-      console.log('Connecting to server:', serverUrl);
+          const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:7860';
+    this.lastServerUrl = serverUrl; // Store for light WebSocket
+    console.log('Connecting to server:', serverUrl);
       
       const selectedBot = this.botSelect?.value;
       if (!selectedBot) {
@@ -362,6 +480,522 @@ class WebsocketClientApp {
     }
   }
 
+    /**
+   * Set up light control WebSocket connection
+   */
+  private async setupLightControlWebSocket(): Promise<void> {
+    try {
+      // Check Shelly availability first
+      this.shellyAvailable = await this.checkShellyAvailability();
+      if (this.shellyAvailable) {
+        this.log('✅ Shelly device detected and available');
+      } else {
+        this.log('⚠️ Shelly device not available, lights will only animate in UI');
+      }
+      
+      // Use the same server URL that we used for the voice connection
+      const serverUrl = this.lastServerUrl || import.meta.env.VITE_SERVER_URL || 'http://localhost:7860';
+      const selectedBot = this.botSelect?.value;
+      if (!selectedBot) {
+        this.log('❌ No bot selected for light control WebSocket');
+        return;
+      }
+
+      const wsUrl = serverUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+      const lightWsUrl = `${wsUrl}/light-ws?bot=${selectedBot}`;
+      
+      this.log(`🔌 Setting up light control WebSocket: ${lightWsUrl}`);
+      
+      this.lightWebSocket = new WebSocket(lightWsUrl);
+      
+      this.lightWebSocket.onopen = () => {
+        this.log('🔌 Light control WebSocket connected');
+      };
+      
+      this.lightWebSocket.onmessage = (event) => {
+        this.log(`🔌 Light control message received: ${event.data}`);
+        console.log('🔌 Raw light WebSocket message:', event.data);
+        try {
+          const data = JSON.parse(event.data);
+          console.log('🔌 Parsed light control data:', data);
+          this.handleLightWebSocketMessage(data);
+        } catch (error) {
+          this.log(`❌ Error parsing light control message: ${error}`);
+          console.error('❌ Light message parsing error:', error);
+        }
+      };
+      
+      this.lightWebSocket.onerror = (error) => {
+        this.log(`❌ Light control WebSocket error: ${error}`);
+      };
+      
+      this.lightWebSocket.onclose = () => {
+        this.log('🔌 Light control WebSocket closed');
+      };
+      
+    } catch (error) {
+      this.log(`❌ Error setting up light control WebSocket: ${error}`);
+    }
+  }
+
+  /**
+   * Handle light control WebSocket messages
+   */
+  private handleLightWebSocketMessage(message: any): void {
+    console.log('🎨 Processing light WebSocket message:', message);
+    
+    if (message.type === 'speaking_start') {
+      this.log(`🎤 Bot started speaking: ${message.bot_config}`);
+      console.log('🎤 Speaking started, beginning light animation');
+      
+      // Start local light animation
+      this.startLightAnimation(message.bot_config);
+      
+    } else if (message.type === 'speaking_stop') {
+      this.log(`🔇 Bot stopped speaking: ${message.bot_config}`);
+      console.log('🔇 Speaking stopped, ending light animation');
+      
+      // Stop local light animation and turn off lights
+      this.stopLightAnimation(message.bot_config);
+      
+    } else if (message.type === 'light_command') {
+      this.log(`🎨 Light command received for ${message.bot_config}`);
+      console.log('🎨 Light command details:', message);
+      
+      this.lightController.handleLightCommand(message);
+      
+      // Update color display with the received color
+      const color = {
+        r: message.command.red / 255,
+        g: message.command.green / 255,
+        b: message.command.blue / 255,
+        a: message.command.white / 255
+      };
+      console.log('🎨 Extracted color:', color);
+      this.updateColorDisplay(color);
+    } else {
+      console.log('📡 Non-light command message:', message);
+    }
+  }
+
+  /**
+   * Start local light animation for a bot
+   */
+  private startLightAnimation(botConfig: string): void {
+    console.log(`🎨 Starting light animation for ${botConfig}`);
+    
+    // Get bot configuration for colors
+    const botColors = this.getBotColors(botConfig);
+    if (!botColors) {
+      console.warn(`⚠️ No color config found for ${botConfig}`);
+      return;
+    }
+    
+    // Start the animation loop
+    this.runLightAnimation(botConfig, botColors);
+  }
+
+  /**
+   * Stop local light animation for a bot
+   */
+  private stopLightAnimation(botConfig: string): void {
+    console.log(`🎨 Stopping light animation for ${botConfig}`);
+    
+    // Stop any running animation
+    if (this.lightAnimationInterval) {
+      clearInterval(this.lightAnimationInterval);
+      this.lightAnimationInterval = null;
+      console.log(`🎨 Animation loop stopped for ${botConfig}`);
+    }
+    
+    // Fade to off color smoothly
+    console.log(`🎨 Fading to off color for ${botConfig}...`);
+    this.fadeToOffColor(botConfig);
+  }
+
+  /**
+   * Run the light animation loop
+   */
+  private runLightAnimation(botConfig: string, colors: any): void {
+    let startTime = Date.now();
+    
+    this.lightAnimationInterval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000; // seconds
+      
+      // Calculate animated color using the same algorithm as the server
+      const animatedColor = this.calculateAnimatedColor(colors, elapsed);
+      
+      // Apply the color to lights
+      this.applyLightColor(botConfig, animatedColor);
+      
+      // Update color display
+      this.updateColorDisplay(animatedColor);
+      
+    }, 1000 / 30); // 30 FPS
+  }
+
+  /**
+   * Calculate animated color with enhanced variation
+   */
+  private calculateAnimatedColor(colors: any, elapsed: number): any {
+    // Enhanced color shifting with multiple phases
+    const colorShiftFactor = this.calculateColorShiftFactor(elapsed, colors.colorShiftSpeed);
+    const baseColor = this.lerpColor(colors.primary, colors.fadeTo, colorShiftFactor);
+    
+    // Add complementary color variation for more interest
+    const complementaryVariation = this.calculateComplementaryVariation(elapsed, colors);
+    
+    // Enhanced pulsing effect
+    const pulseFactor = this.calculatePulseFactor(elapsed, colors.pulseSpeed, colors.pulseIntensity);
+    
+    // Enhanced breathing effect
+    const breathingFactor = this.calculateBreathingFactor(elapsed, colors.breathingSpeed, colors.breathingIntensity);
+    
+    // Add subtle hue shifting for more dynamic colors
+    const hueShift = this.calculateHueShift(elapsed, colors);
+    
+    // Combine all effects
+    const enhancedColor = {
+      r: (baseColor.r + complementaryVariation.r * 0.3) * pulseFactor * breathingFactor + hueShift.r * 0.2,
+      g: (baseColor.g + complementaryVariation.g * 0.3) * pulseFactor * breathingFactor + hueShift.g * 0.2,
+      b: (baseColor.b + complementaryVariation.b * 0.3) * pulseFactor * breathingFactor + hueShift.b * 0.2,
+      a: baseColor.a * breathingFactor
+    };
+    
+    return this.clampColor(enhancedColor);
+  }
+
+  /**
+   * Helper methods for color calculations
+   */
+  private lerpColor(a: any, b: any, t: number): any {
+    return {
+      r: a.r + (b.r - a.r) * t,
+      g: a.g + (b.g - a.g) * t,
+      b: a.b + (b.b - a.b) * t,
+      a: a.a + (b.a - a.a) * t
+    };
+  }
+
+  private clampColor(color: any): any {
+    return {
+      r: Math.max(0, Math.min(1, color.r)),
+      g: Math.max(0, Math.min(1, color.g)),
+      b: Math.max(0, Math.min(1, color.b)),
+      a: Math.max(0, Math.min(1, color.a))
+    };
+  }
+
+  private calculateColorShiftFactor(elapsed: number, speed: number): number {
+    const phase = elapsed * speed;
+    
+    // Use multiple sine waves with different frequencies for more organic movement
+    const shift1 = Math.sin(phase) * 0.4;
+    const shift2 = Math.sin(phase * 1.3) * 0.3;
+    const shift3 = Math.sin(phase * 0.7) * 0.3;
+    const shift4 = Math.sin(phase * 2.1) * 0.2; // Additional high-frequency variation
+    
+    const combinedShift = shift1 + shift2 + shift3 + shift4;
+    return (combinedShift + 1) / 2; // Normalize to 0-1
+  }
+
+  private calculatePulseFactor(elapsed: number, speed: number, intensity: number): number {
+    // Add some randomness and multiple frequencies to pulsing
+    const basePulse = Math.sin(elapsed * speed) * intensity;
+    const secondaryPulse = Math.sin(elapsed * speed * 1.7) * intensity * 0.5;
+    const microPulse = Math.sin(elapsed * speed * 3.2) * intensity * 0.3;
+    
+    return 1 + basePulse + secondaryPulse + microPulse;
+  }
+
+  private calculateBreathingFactor(elapsed: number, speed: number, intensity: number): number {
+    // Add some randomness and multiple frequencies to breathing
+    const baseBreathing = Math.sin(elapsed * speed) * intensity;
+    const secondaryBreathing = Math.sin(elapsed * speed * 0.6) * intensity * 0.4;
+    const microBreathing = Math.sin(elapsed * speed * 2.3) * intensity * 0.2;
+    
+    return 1 + baseBreathing + secondaryBreathing + microBreathing;
+  }
+
+  /**
+   * Calculate complementary color variation for more interest
+   */
+  private calculateComplementaryVariation(elapsed: number, colors: any): any {
+    // Create complementary colors based on the primary color
+    const complementary = {
+      r: 1 - colors.primary.r,
+      g: 1 - colors.primary.g,
+      b: 1 - colors.primary.b,
+      a: 1
+    };
+    
+    // Use different sine wave frequencies for each channel
+    const rVariation = Math.sin(elapsed * colors.colorShiftSpeed * 0.7) * 0.15;
+    const gVariation = Math.sin(elapsed * colors.colorShiftSpeed * 1.1) * 0.15;
+    const bVariation = Math.sin(elapsed * colors.colorShiftSpeed * 0.9) * 0.15;
+    
+    return {
+      r: complementary.r * rVariation,
+      g: complementary.g * gVariation,
+      b: complementary.b * bVariation,
+      a: 0
+    };
+  }
+
+  /**
+   * Calculate subtle hue shifting for dynamic colors
+   */
+  private calculateHueShift(elapsed: number, colors: any): any {
+    // Add subtle color temperature shifts
+    const warmShift = Math.sin(elapsed * colors.colorShiftSpeed * 0.5) * 0.1;
+    const coolShift = Math.sin(elapsed * colors.colorShiftSpeed * 0.8) * 0.1;
+    
+    return {
+      r: warmShift,      // Red channel gets warm variations
+      g: (warmShift + coolShift) * 0.5,  // Green gets mixed
+      b: coolShift,      // Blue channel gets cool variations
+      a: 0
+    };
+  }
+
+  /**
+   * Get bot color configuration
+   */
+  private getBotColors(botConfig: string): any {
+    // This would come from your bot config files
+    const colorConfigs: { [key: string]: any } = {
+      'Charon': {
+        primary: { r: 0.3, g: 0.0, b: 0.4, a: 1.0 },
+        fadeTo: { r: 0.8, g: 0.2, b: 0.9, a: 1.0 }, // More vibrant purple-red
+        offColor: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+        colorShiftSpeed: 1.2,
+        pulseSpeed: 0.8,
+        pulseIntensity: 0.3,
+        breathingSpeed: 0.5,
+        breathingIntensity: 0.2
+      },
+      'Kore': {
+        primary: { r: 0.1, g: 0.8, b: 0.1, a: 1.0 },
+        fadeTo: { r: 0.3, g: 0.9, b: 0.4, a: 1.0 }, // More vibrant green-cyan
+        offColor: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+        colorShiftSpeed: 1.5,
+        pulseSpeed: 2.5,
+        pulseIntensity: 0.15,
+        breathingSpeed: 2.0,
+        breathingIntensity: 0.25
+      },
+      'Puck': {
+        primary: { r: 0.1, g: 0.1, b: 0.8, a: 1.0 },
+        fadeTo: { r: 0.4, g: 0.3, b: 0.9, a: 1.0 }, // More vibrant blue-purple
+        offColor: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+        colorShiftSpeed: 2.5,
+        pulseSpeed: 3.5,
+        pulseIntensity: 0.3,
+        breathingSpeed: 1.8,
+        breathingIntensity: 0.35
+      },
+      'Zephyr': {
+        primary: { r: 0.4, g: 0.7, b: 1.0, a: 1.0 },
+        fadeTo: { r: 0.8, g: 0.9, b: 0.6, a: 1.0 }, // More vibrant cyan-yellow
+        offColor: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+        colorShiftSpeed: 2.5,
+        pulseSpeed: 2.0,
+        pulseIntensity: 0.25,
+        breathingSpeed: 1.2,
+        breathingIntensity: 0.18
+      }
+    };
+    
+    return colorConfigs[botConfig];
+  }
+
+  /**
+   * Check if Shelly device is available
+   */
+  private async checkShellyAvailability(): Promise<boolean> {
+    try {
+      const shellyIP = '192.168.2.77';
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+      
+      const response = await fetch(`http://${shellyIP}/light/0`, {
+        method: 'GET',
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      return response.ok;
+    } catch (error) {
+      console.log(`🔍 Shelly availability check failed: ${error}`);
+      return false;
+    }
+  }
+
+  /**
+   * Apply light color to Shelly device
+   */
+  private async applyLightColor(botConfig: string, color: any): Promise<void> {
+    // Skip if Shelly is disabled
+    if (!this.shellyAvailable) {
+      console.log('🎨 Shelly disabled, skipping light color update');
+      return;
+    }
+
+    try {
+      // Convert to Shelly format (0-255)
+      const red = Math.round(color.r * 255);
+      const green = Math.round(color.g * 255);
+      const blue = Math.round(color.b * 255);
+      const white = Math.round(color.a * 255);
+      
+      // Get Shelly IP from config (you might want to store this per bot)
+      const shellyIP = '192.168.2.77'; // This should come from config
+      
+      // Send HTTP command to Shelly
+      const url = `http://${shellyIP}/light/0`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          turn: 'on',
+          mode: 'color',
+          red: red,
+          green: green,
+          blue: blue,
+          white: white
+        })
+      });
+      
+      if (!response.ok) {
+        console.warn(`⚠️ Failed to set light color: ${response.status}`);
+        this.handleShellyError();
+      } else {
+        // Reset error count on success
+        this.shellyErrorCount = 0;
+      }
+      
+    } catch (error) {
+      console.error('❌ Error setting light color:', error);
+      this.handleShellyError();
+    }
+  }
+
+  /**
+   * Fade smoothly from current color to off color
+   */
+  private fadeToOffColor(botConfig: string): void {
+    console.log(`🎨 Starting fade to off for ${botConfig}`);
+    
+    // Get bot's configured off color
+    const botColors = this.getBotColors(botConfig);
+    if (!botColors) {
+      console.warn(`⚠️ No color config found for ${botConfig}, using default off`);
+      this.turnOffLights(botConfig);
+      return;
+    }
+    
+    const offColor = botColors.offColor;
+    const fadeDuration = 1000; // 1 second fade
+    const fadeSteps = 30; // 30 steps for smooth fade
+    const stepDuration = fadeDuration / fadeSteps;
+    
+    let currentStep = 0;
+    
+    const fadeInterval = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / fadeSteps;
+      
+      // Interpolate from current color to off color
+      const currentColor = this.currentDisplayedColor || { r: 1, g: 1, b: 1, a: 1 };
+      const fadeColor = this.lerpColor(currentColor, offColor, progress);
+      
+      // Apply the faded color
+      this.applyLightColor(botConfig, fadeColor);
+      this.updateColorDisplay(fadeColor);
+      
+      if (currentStep >= fadeSteps) {
+        clearInterval(fadeInterval);
+        console.log(`🎨 Fade to off completed for ${botConfig}`);
+        
+        // Ensure final off color is applied
+        this.applyLightColor(botConfig, offColor);
+        this.updateColorDisplay(offColor);
+      }
+    }, stepDuration);
+    
+    console.log(`🎨 Fade transition started: ${fadeSteps} steps over ${fadeDuration}ms`);
+  }
+
+  /**
+   * Handle Shelly connection errors and disable if too many occur
+   */
+  private handleShellyError(): void {
+    this.shellyErrorCount++;
+    console.warn(`⚠️ Shelly error count: ${this.shellyErrorCount}/${this.MAX_SHELLY_ERRORS}`);
+    
+    if (this.shellyErrorCount >= this.MAX_SHELLY_ERRORS) {
+      this.shellyAvailable = false;
+      this.shellyErrorCount = 0;
+      this.log('🚫 Shelly disabled due to repeated connection errors');
+      this.log('💡 Lights will still animate in the UI but won\'t control physical devices');
+    }
+  }
+
+  /**
+   * Turn off lights for a bot
+   */
+  private async turnOffLights(botConfig: string): Promise<void> {
+    try {
+      // Get bot's configured off color
+      const botColors = this.getBotColors(botConfig);
+      if (!botColors) {
+        console.warn(`⚠️ No color config found for ${botConfig}, using default off`);
+        // Fallback to default off
+        await this.applyLightColor(botConfig, { r: 0, g: 0, b: 0, a: 0 });
+        this.updateColorDisplay({ r: 0, g: 0, b: 0, a: 0 });
+        return;
+      }
+      
+      // Use bot's configured off color
+      const offColor = botColors.offColor;
+      console.log(`🎨 Using ${botConfig}'s off color:`, offColor);
+      
+      // Apply the off color (will be skipped if Shelly is disabled)
+      await this.applyLightColor(botConfig, offColor);
+      
+      // Update color display to show off state
+      this.updateColorDisplay(offColor);
+      
+      console.log(`🎨 Lights set to off color for ${botConfig}`);
+      
+    } catch (error) {
+      console.error('❌ Error turning off lights:', error);
+    }
+  }
+
+  /**
+   * Reset client state for clean connection
+   */
+  private resetClientState(): void {
+    this.log('🔄 Resetting client state for clean connection...');
+    
+    // Clear any existing light animation
+    if (this.lightAnimationInterval) {
+      clearInterval(this.lightAnimationInterval);
+      this.lightAnimationInterval = null;
+      this.log('🎨 Light animation interval cleared');
+    }
+    
+    // Reset color display
+    this.currentDisplayedColor = { r: 0, g: 0, b: 0, a: 0 };
+    this.updateColorDisplay({ r: 0, g: 0, b: 0, a: 0 });
+    
+    // Reset status
+    this.updateStatus('Ready');
+    
+    this.log('✅ Client state reset complete');
+  }
+
   /**
    * Disconnect from the bot and clean up media resources
    */
@@ -390,6 +1024,29 @@ class WebsocketClientApp {
         this.botAudio.pause();
         this.botAudio.currentTime = 0;
         this.botAudio.src = '';
+        
+        // Close light control WebSocket
+        if (this.lightWebSocket) {
+          try {
+            this.lightWebSocket.close();
+            this.lightWebSocket = null;
+            this.log('🔌 Light control WebSocket closed');
+          } catch (error) {
+            this.log(`❌ Error closing light control WebSocket: ${error}`);
+          }
+        }
+        
+        // Clean up light animation state
+        if (this.lightAnimationInterval) {
+          clearInterval(this.lightAnimationInterval);
+          this.lightAnimationInterval = null;
+          this.log('🎨 Light animation interval cleared');
+        }
+        
+        // Reset color display and state
+        this.currentDisplayedColor = { r: 0, g: 0, b: 0, a: 0 };
+        this.updateColorDisplay({ r: 0, g: 0, b: 0, a: 0 });
+        this.log('🎨 Color display reset to off state');
         
         this.log('Disconnection complete');
       } catch (error) {

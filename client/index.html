@@ -72,6 +72,55 @@
                 <div class="status-pulse"></div>
               </div>
             </div>
+
+            <div class="light-control-section">
+              <h4 class="light-title">Kristall-Lichtsteuerung</h4>
+              <div class="light-controls">
+                <button id="test-red" class="fantasy-button light-btn">
+                  <span class="button-text">Test Rot</span>
+                </button>
+                <button id="test-green" class="fantasy-button light-btn">
+                  <span class="button-text">Test Grün</span>
+                </button>
+                <button id="test-blue" class="fantasy-button light-btn">
+                  <span class="button-text">Test Blau</span>
+                </button>
+                <button id="test-off" class="fantasy-button light-btn">
+                  <span class="button-text">Licht aus</span>
+                </button>
+              </div>
+              <div class="light-status">
+                <span class="light-label">Licht Status:</span>
+                <span id="light-status" class="light-value">Bereit</span>
+              </div>
+              
+              <div class="current-color-display">
+                <h5 class="color-title">Aktuelle Farbe</h5>
+                <div class="color-preview" id="color-preview"></div>
+                <div class="color-values">
+                  <div class="color-channel">
+                    <span class="channel-label">R:</span>
+                    <span id="red-value" class="channel-value">0</span>
+                  </div>
+                  <div class="color-channel">
+                    <span class="channel-label">G:</span>
+                    <span id="green-value" class="channel-value">0</span>
+                  </div>
+                  <div class="color-channel">
+                    <span class="channel-label">B:</span>
+                    <span id="blue-value" class="channel-value">0</span>
+                  </div>
+                  <div class="color-channel">
+                    <span class="channel-label">A:</span>
+                    <span id="alpha-value" class="channel-value">0</span>
+                  </div>
+                </div>
+                <div class="color-hex">
+                  <span class="hex-label">HEX:</span>
+                  <span id="hex-value" class="hex-value">#000000</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -95,7 +144,7 @@
 
   <audio id="bot-audio" autoplay></audio>
 
-  <script type="module" src="/src/app.ts"></script>
+  <script type="module" src="/src/app.js"></script>
   <link rel="stylesheet" href="/src/style.css">
 </body>
 
