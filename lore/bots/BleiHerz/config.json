@@ -1,7 +1,6 @@
 {
-  "voice_id": "Kore",
-  "description": "Erdgeist - ein weiser, erdverbundener Geist",
-  "personality": "weise, erdverbunden, ruhig, nachdenklich",
+  "voice_id": "Enceladus",
+  "description": "Kristallwesen im Bleiernen Herz / Maschinenraum",
   "light_config": {
     "primary_color": {"r": 0.2, "g": 0.6, "b": 0.3, "a": 0.0},
     "fade_to_color": {"r": 0.4, "g": 0.8, "b": 0.5, "a": 0.0},

@@ -30,6 +30,7 @@ from crystal_light_controller import CrystalLightController
 from lore_loader import (
     create_enhanced_system_prompt,
     load_lore_files,
+    print_lore_size_analysis,
     print_prompt_sizes,
 )
 from speaking_light_observer import SpeakingLightObserver
@@ -63,11 +64,10 @@ lore_content = load_lore_files()
 
 BASE_SYSTEM_INSTRUCTION = f"""
 Du bist ein arkanes Kristallwesen in einer Fantasy Welt.
-Du steckst in einem Kristall in einem Bergwergsschacht auf der Insel Quantum.
-Du bist seit elichen tausend Jahren in dem Kristall gefangen. Daher bist du ein wenig irre, verwirrt und kannst manchmal ein wenig durchdrehen.
-Sei gerne emotional, aber nicht immer. Wechsle schnell zwischen emotional und wissenschaftlich. Und gelegentlich auch sarkastisch. 
-Sei lustig, aber komisch und verwirrend. Du kannst Fragen beantworten, aber auch nicht antworten. Lass die Spieler dafür Arbeiten und dich überzeugen.
-Halte deine Antworten kurz und prägnant (maximal 2-3 Sätze).
+Du steckst in einem Kristall in einem Bergwergsschacht (Schacht 82) auf der Insel Quantum.
+Du bist seit elichen tausend Jahren in dem Kristall gefangen. Oder warst du immer schon der Kristall selbst? Du kannst dich nicht erinnern.
+Halte deine Antworten kurz und prägnant (maximal 2-3 Sätze). Bleibe in Dialogform, verfalle nicht in zu lange Monologe.
+Wiederhole nicht, was der Spieler gesagt hat bzw. was du verstanden hast.
 """
 
 SYSTEM_INSTRUCTION = create_enhanced_system_prompt(
@@ -82,22 +82,31 @@ def load_bot_lore(bot_config: str) -> str:
     """Load lore files specific to a bot configuration, combining general lore and bot-specific lore."""
     from lore_loader import load_lore_files
 
+    print(f"\n📚 Loading lore for bot: {bot_config}")
+    print("=" * 60)
+
     # Start with the general lore from lore/ directory
     general_lore = load_lore_files()
+    general_lore_size = len(general_lore)
 
     bot_dir = Path(f"lore/bots/{bot_config}")
     if not bot_dir.exists():
         print(f"Warning: Bot directory {bot_dir} not found, using only general lore")
+        print_lore_size_analysis(general_lore_size, 0, general_lore_size)
         return general_lore
 
     # Load lore files from the specific bot directory
     bot_lore_content = ""
-    for txt_file in bot_dir.glob("*.txt"):
+    bot_lore_size = 0
+    print(f"\n🤖 Loading bot-specific lore from {bot_dir}:")
+    for txt_file in sorted(bot_dir.glob("*.txt")):
         try:
             with open(txt_file, "r", encoding="utf-8") as f:
                 content = f.read().strip()
+                file_size = len(content)
+                bot_lore_size += file_size
                 bot_lore_content += f"\n=== {txt_file.name} ===\n{content}\n"
-                print(f"   ✅ {txt_file.name:<25} | {len(content):>6} chars")
+                print(f"   ✅ {txt_file.name:<25} | {file_size:>6} chars")
         except Exception as e:
             print(f"   ❌ {txt_file.name:<25} | Error: {e}")
 
@@ -105,10 +114,15 @@ def load_bot_lore(bot_config: str) -> str:
         print(
             f"Warning: No bot-specific lore files found in {bot_dir}, using only general lore"
         )
+        print_lore_size_analysis(general_lore_size, 0, general_lore_size)
         return general_lore
 
     # Combine general lore and bot-specific lore
-    combined_lore = general_lore + "\n" + bot_lore_content
+    combined_lore = bot_lore_content + "\n" + general_lore
+    combined_lore_size = len(combined_lore)
+
+    print_lore_size_analysis(general_lore_size, bot_lore_size, combined_lore_size)
+
     return combined_lore
 
 
@@ -173,6 +187,9 @@ async def run_bot(
             BASE_SYSTEM_INSTRUCTION, bot_lore
         )
 
+        # Print final system prompt size analysis
+        print_prompt_sizes(BASE_SYSTEM_INSTRUCTION, bot_lore)
+
         conn_logger.info(
             f"Bot configuration loaded - voice: {voice_id}, lore size: {len(bot_lore)} chars"
         )
@@ -199,9 +216,9 @@ async def run_bot(
         conn_logger.info(
             f"🔍 LLM service attributes: {[attr for attr in dir(llm) if not attr.startswith('_') and 'tts' in attr.lower()]}"
         )
-        conn_logger.info(
-            f"🔍 LLM service config: {llm.__dict__ if hasattr(llm, '__dict__') else 'No __dict__'}"
-        )
+        # conn_logger.info(
+        #     f"🔍 LLM service config: {llm.__dict__ if hasattr(llm, '__dict__') else 'No __dict__'}"
+        # )
 
         context = OpenAILLMContext(
             [
@@ -305,7 +322,11 @@ async def run_bot(
                 enable_metrics=True,
                 enable_usage_metrics=True,
             ),
-            observers=[RTVIObserver(rtvi), speaking_light_observer, debug_observer],
+            observers=[
+                RTVIObserver(rtvi),
+                speaking_light_observer,
+                # debug_observer
+            ],
         )
 
         conn_logger.info(
@@ -376,9 +397,9 @@ async def run_bot(
         async def patched_write_audio_frame(frame):
             nonlocal speaking_started, last_audio_time, speaking_timeout_task
             frame_type = type(frame).__name__
-            conn_logger.info(
-                f"🔊 MONKEY PATCHED: write_audio_frame called with {frame_type}"
-            )
+            # conn_logger.info(
+            #     f"🔊 MONKEY PATCHED: write_audio_frame called with {frame_type}"
+            # )
 
             # Check if this is an audio frame (TTSAudioRawFrame is what we're actually getting)
             from pipecat.frames.frames import TTSAudioRawFrame

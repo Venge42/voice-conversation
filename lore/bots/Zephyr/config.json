@@ -1,7 +1,6 @@
 {
   "voice_id": "Zephyr",
   "description": "Windgeist - ein luftiger, poetischer Geist",
-  "personality": "poetisch, luftig, metaphorisch, verspielt",
   "light_config": {
     "primary_color": {"r": 0.4, "g": 0.7, "b": 0.5, "a": 0.0},
     "fade_to_color": {"r": 0.6, "g": 0.9, "b": 0.8, "a": 0.0},

@@ -1,7 +1,6 @@
 {
-  "voice_id": "Puck",
-  "description": "Kristall Wesen - ein mystisches, kristallines Wesen",
-  "personality": "emotional, verwirrt, wissenschaftlich, sarkastisch",
+  "voice_id": "Gacrux",
+  "description": "Kristall Wesen in der Kristallkammer / Steuerzentrale",
   "light_config": {
     "primary_color": {"r": 0.8, "g": 0.2, "b": 1.0, "a": 0.0},
     "fade_to_color": {"r": 1.0, "g": 0.4, "b": 0.6, "a": 0.0},

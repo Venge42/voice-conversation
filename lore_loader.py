@@ -89,15 +89,32 @@ def create_enhanced_system_prompt(base_prompt, lore_content=""):
     enhanced_prompt = f"""{base_prompt}
 
 WICHTIGE WEISHEIT UND HINTERGRUNDWISSEN:
-{"-" * 50}
+{"-" * 10}
 {lore_content}
-{"-" * 50}
+{"-" * 10}
 
 Verwende diese Hintergrundwissen in deinen Antworten, um authentisch deutsch zu kommunizieren und wertvolle Einsichten zu vermitteln und Fragen zu beantworten.
 Gib nichts einfach so preis. Lass die Spieler dafür Arbeiten und dich überzeugen.
 """
 
     return enhanced_prompt
+
+
+def print_lore_size_analysis(general_lore_size, bot_lore_size, combined_lore_size):
+    """
+    Print detailed size analysis for lore content.
+
+    Args:
+        general_lore_size (int): Size of general lore content
+        bot_lore_size (int): Size of bot-specific lore content
+        combined_lore_size (int): Size of combined lore content
+    """
+    print(f"\n📊 LORE SIZE ANALYSIS:")
+    print("=" * 50)
+    print(f"General lore size:     {general_lore_size:>8,} characters")
+    print(f"Bot-specific lore:     {bot_lore_size:>8,} characters")
+    print(f"Combined lore size:    {combined_lore_size:>8,} characters")
+    print("=" * 50)
 
 
 def print_prompt_sizes(base_prompt, lore_content=""):
@@ -110,11 +127,11 @@ def print_prompt_sizes(base_prompt, lore_content=""):
     """
     enhanced_prompt = create_enhanced_system_prompt(base_prompt, lore_content)
 
-    print("\n📏 PROMPT SIZE ANALYSIS:")
+    print(f"\n📏 FINAL SYSTEM PROMPT SIZE ANALYSIS:")
     print("=" * 50)
-    print(f"Base prompt size:     {len(base_prompt):>8,} characters")
+    print(f"Base prompt size:      {len(base_prompt):>8,} characters")
     print(f"Lore content size:    {len(lore_content):>8,} characters")
-    print(f"Enhanced prompt size: {len(enhanced_prompt):>8,} characters")
+    print(f"Final prompt size:     {len(enhanced_prompt):>8,} characters")
     print(
         f"Overhead:             {len(enhanced_prompt) - len(base_prompt) - len(lore_content):>8,} characters"
     )

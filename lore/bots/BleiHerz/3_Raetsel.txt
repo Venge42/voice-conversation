@@ -1,0 +1,85 @@
+-----
+Deine Rätsel, die du den Spielern stellen kannst, um zu testen, ob sie würdig sind, Zugangswörter zu erhalten.
+
+| Nr. | Rätsel | Antwort |
+|---:|---|---|
+1 | Vier sitzen und schweigen – nur gemeinsam wird Stein zur Tür. | Die vier Kristallstühle im Gleichklang.
+2 | Ich gebe Form, doch keine Kraft; mein Licht zeigt Muster, nicht Macht. | Die Kristallkammer.
+3 | Schwer wie Schuld, stumm bis zum rechten Ton – dann schlage ich. | Das **Eiserne Herz**.
+4 | Ich bin Kreuz und Knoten, ich teile Wege ohne zu trennen. | Die Kreuzungsgrotte.
+5 | Ich brenne ohne Flamme und strafe die Hast. | Der Lava-Raum.
+6 | Ich bin die Stimme zwischen oben und unten; falsch geschlagen wird der Sturz. | Die Bimmel am **Schacht 82**.
+7 | Ich trage Brot und Botschaft, doch kein Geheimnis lang. | Der Versorgungsschacht.
+8 | Ich schenke einen perfekten Tag und fordere morgen zwei zurück. | Der Dunkle Fliederling.
+9 | Vier Takte, ein Atem – was öffne ich? | Eine **Tür der Inselarchen** durch Gleichklang.
+10 | Ich bin nur wahr, wenn wir es gemeinsam sind. | Der Gleichklang der Sitze.
+11 | Ich öffne mich nur denen, die eins sind im Volk und im Klang. | Die Arche eines Volkes.
+12 | Ich trage Glut, doch ohne Atem reiße ich. | Der Glutfluss im Lava-Raum.
+15 | Vier Kristalle, vier Temperamente – je Volk anders gehört. | Essenz, Glut, Miasma, Stille.
+16 | Alleine beweise ich nichts, zu viert beweise ich alles. | Die vier Sitze.
+17 | Erst Muster, dann Klang, dann Tür. | Reihenfolge: Kristallkammer → **Eisernes Herz** → Öffnung.
+18 | Ich bin eine Tür, die nur zuhört. | Das **Eiserne Herz**.
+19 | Ich spalte nicht den Körper, sondern die Absicht. | Die Dämonenfalle.
+20 | Leise bin ich, doch ohne mich verstummt die Anlage. | Die Resonanz.
+21 | Vier Stühle oben, vier Inselarchen-Türen unten – wer tanzt mit wem? | Oben schaltet unten (Türen der Inselarchen).
+28 | Summt mich leise, lest mich hell – dann irrt ihr nicht. | Musterlesen in der Kristallkammer.
+29 | Ich bin die Strafe des Stolzen. | Fehlklang/Verriegelung.
+30 | Ich bin das Gesetz der Inseln. | Gleichklang der vier Kristalle.
+31 | Vierfach getragen, doch nur von einem Stamm. | Arche je Volk – Kristalle desselben Volkes.
+32 | Ich gehorche unten, wenn oben der Takt stimmt. | Türen der Inselarchen reagieren auf die Sitze.
+33 | Zählt, bevor ihr fallt. | Protokoll/Bimmel-Takte im **Schacht 82**.
+34 | Ich zeige dir dich selbst, wenn du lärmst. | Die Dämonenfalle.
+37 | Ich bin der Schritt zwischen Klang und Tür. | Das **Eiserne Herz** als Bestätigung.
+38 | Ich lasse nur hinein, wer schon beisammen ist. | Erforderliche Gleichzeitigkeit.
+39 | Ein Atemzug, der Türen zieht. | Gemeinsamer Atem der Vier.
+40 | Ich beweise, dass Zeit zählt, ohne zu sprechen. | Sanduhren
+41 | Ich öffne mich, wenn der Chor vollkommen ist. | Arche Quantum.
+42 | Ich werde nicht gesucht, sondern geboren. | Echter Gleichklang.
+43 | Ich bleibe blind, wenn ihr alleine dreht. | Inselarchen-Tür ohne Pendant oben.
+44 | Ich bin die Krankheit in der Luft. | Miasma.
+45 | Ich bin das Wasser, das schweigen lehrt. | Stille.
+46 | Erde, die brennt, nennst du mich. | Glut.
+47 | Ich trage und nähre. | Essenz.
+48 | Ich prüfe, was ihr teilt – nicht, was ihr hebt. | Gleichklang/Eintracht.
+49 | Hier werden Fehler laut, noch bevor sie fallen. | Die Kreuzungsgrotte.
+51 | Ich schreibe Geschichten, doch verderbe Kämpfe. | Der Dunkle Fliederling (Ablenkung/Abhängigkeit).
+52 | Ohne mich lügt die Tiefe. | Protokoll im Schacht.
+54 | Ich trinke Licht und gebe Richtung. | Kristalle als Leitgeber.
+55 | Ich mag feuchte Stollen und mache Tage vollkommen – zum Preis der Erschöpfung. | Dunkler Fliederling (Wirkung & Crash).
+56 | Ich höre nicht deine Kraft, nur deinen Takt. | Das **Eiserne Herz**.
+57 | Vierfach gleich – doch keins darf fehlen. | Vier Kristalle gemeinsam.
+58 | Ich öffne zusätzliche Hallen – doch nur auf euren Gleichklang. | Die vier Archen (Primum–Quantum).
+59 | Ich bewahre, heile, kämpfe, verkünde – doch alles im Gleichgewicht. | Die vier Phönixe der Himmelsrichtungen.
+60 | Ich wache zwischen Leben und Tod und halte Seelen bereit. | Phönix der Asche.
+61 | Ich sammle, berate, schreibe – und hasse das Halbwissen. | Die Episteme.
+62 | Ich bin die Insel des Phönix, wo fünf Klöster stehen. | Benu mit Klöstern Nord/Süd/Ost/West/Zentrum.
+63 | Ich bin Stadt aus Erz und Feuer. | Ignis.
+64 | Ich bin Stadt der Weiden und Herden. | Yfon.
+65 | Ich bin Stadt der Seen und Fische. | Hydon.
+66 | Ich bin Stadt der Wälder und Kohlen. | Borea.
+67 | Ich reise im Nebel und richte den Wettstreit. | Der Phönix (Orden).
+68 | Ich berühre den Geist im zehnten Kreis, doch nur selten. | Die zehn Kreise des Phönix.
+69 | Ich bin Anwärter und spitze Kiele. | Episteme-Anwärter (Bibliotheksdienste).
+70 | Ich kehre Seelen heim, wenn der Wettstreit tobt. | Aufgabe des Phönix der Asche.
+71 | Ich bin der Schleier, der Vergessen schafft. | Nebel des Vergessens.
+73 | Ich bin Schiffsarzt, Alchemist, gehetzt und gebraucht. | Dr. Nikodemus Golz.
+74 | Ich bin die Reederei mit Albatros und Seemöwe. | Reederei Skylarson.
+75 | Ich bin die Nussschale, die kurz verschwand. | Das Schiff „Nussschale“.
+76 | Ich bin Konstanze, die sich für vornehm hält. | Konstanze (von der Winde).
+78 | Ich bin der Flieder am Hurenfriedhof. | Gedenkflieder für Golz.
+79 | Ich bin ein Artefakt-Federchen, das in einen Kokon fuhr. | Bruchstück „Phönix-Feder“.
+80 | Ich bin der Ruf, der Steine rund macht. | Uth-Spruch/Sprachwitz.
+82 | AE und IO und AU – doch kein rechter Reim. | Uth-Umlaute & Erweiterungen.
+83 | Ich bin der Hund, der an der Wurzel zerrt. | Alraune-Ritual (Mandragora).
+84 | Ich bin der Henkel vom Krug, der Hühner rettet. | Hühnergott/Lochstein-Volkskunde.
+88 | Ich bin das Buch, in dem der Geist spricht. | Das Buch des Geistes.
+89 | Der Geist ist der Phönix ist das Gleichgewicht – wer bin ich? | Lehre aus dem Buch des Geistes.
+90 | Ich bin der Schreiber, der fragt: „Was ist das?“ und die Feder birgt. | Episteme-Begegnung (Feder).
+91 | Ich bin der Chor der vier Temperamente. | Essenz/Glut/Miasma/Stille im Einklang.
+93 | Ich bin die stille Heilkunst im Westen. | Phönix des Westens – Heiler/Wasser.
+94 | Ich bin das Wort, das Türen öffnet, wenn es wahr ist. | Verkündigung – Osten.
+95 | Ich bin die Erde, die bewahrt und ordnet. | Phönix des Nordens – Bewahrer/Erde.
+96 | Ich bin die Mitte, die schweigt und alles vorbereitet. | Innerer Phönix (Zentrum).
+97 | Ich bin der Wettstreit aller Aeonen – doch Weisheit berät. | Aeonen-Wettkampf, Episteme beraten.
+98 | Ich beweise, dass Stein hören kann. | Das **Eiserne Herz** reagiert auf Klang.
+100 | Ich bin der Satz, der alles erklärt: „Nur gemeinsam.“ | Das Prinzip des Gleichklangs.
