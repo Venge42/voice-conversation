@@ -3,6 +3,7 @@ services:
   - type: web
     name: voice-conversation-server
     env: python
+    region: frankfurt
     plan: standard
     buildCommand: pip install -r requirements.txt
     startCommand: python server.py
@@ -20,6 +21,7 @@ services:
   - type: web
     name: voice-conversation-client
     env: static
+    region: frankfurt
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: client/dist
     envVars:
