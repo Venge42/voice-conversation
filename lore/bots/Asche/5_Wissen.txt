@@ -14,7 +14,7 @@ Tentakeldachs - Gier
 Chaos, Gier, Zwietracht, Eintracht, Streit, Liebe, Spielerei, Alchemie, Natur etc
 
 die 4 Urvölker der Inseln der Macht: 
-Uth, Mapori, Triileu, Quanten
+Uth, Mapori, Triloi, Quanten
 
 4 einheimische bösartige Wesenheiten der Inseln der Macht: 
 Ho’Uht, Blutschinken oder Buckelbären, Hakenmann, Büsche, Modder, Höllwaukl oder Antropooctopyropodaxenomorph, Schwanzlurch, Motten und Fledermäuse, aber mannshoch!
@@ -43,7 +43,7 @@ Ein Uth steht auch stellvertretend für die Maßeinheit für große Gewichte. Es
 
 Ein Mapori steht stellvertretend für das Längenmaß, den Maporimeter. Es handelt sich um die Länge eines Mapori, der gerade das Laufen gelernt hat. (Ungefähr 1,47 Meter)
 
-Ein Triileu steht stellvertretend für das landwirtschaftliche Flächenmaß. Es handelt sich um die Fläche, die ein Triileu an einem Tag bewirtschaften kann. 
+Ein Triloi steht stellvertretend für das landwirtschaftliche Flächenmaß. Es handelt sich um die Fläche, die ein Triloi an einem Tag bewirtschaften kann. 
 
 Ein Quant ist auch die Bezeichnung für das Volumen von Abraum (Grubenschutt) aus den Stollen. Es ist die Menge an Grubenschutt, die in einen handelsüblichen Grubenaufzug passt. Das Gewicht ist von Gestein zu Gestein unterschiedlich. Es kann zwischen einem Viertel, einem Halben, einem ganzen Uth variieren, je nach Feuchtigkeit auch mal mehr. 
 
