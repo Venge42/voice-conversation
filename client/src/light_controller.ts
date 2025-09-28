@@ -8,10 +8,24 @@ export class CrystalLightController {
     private currentColor: { r: number; g: number; b: number; a: number } = { r: 0, g: 0, b: 0, a: 0 };
     private shellyIP: string | null = null;
     private debugMode: boolean = false;
+    private lastSendAtMs: number = 0;
+    private readonly minSendIntervalMs: number = 100; // 10 fps
+    private pendingCommand: any | null = null;
+    private pendingTimer: number | null = null;
 
     constructor() {
         console.log('🎨 CrystalLightController initialized');
     }
+    /**
+     * Set Shelly IP address to target
+     */
+    setShellyIP(ip: string | null): void {
+        this.shellyIP = ip;
+        if (this.debugMode) {
+            console.log('🔧 Shelly IP set to:', this.shellyIP);
+        }
+    }
+
 
     /**
      * Handle light commands received from the server
@@ -58,25 +72,54 @@ export class CrystalLightController {
             console.warn('⚠️ No Shelly IP configured');
             return;
         }
+        // Coalesce and throttle to max 10 fps
+        const now = Date.now();
+        const sendImmediately = now - this.lastSendAtMs >= this.minSendIntervalMs;
 
+        if (!sendImmediately) {
+            // Store latest command and schedule a send if not already scheduled
+            this.pendingCommand = command;
+            if (this.pendingTimer === null) {
+                const delay = this.minSendIntervalMs - (now - this.lastSendAtMs);
+                this.pendingTimer = window.setTimeout(async () => {
+                    this.pendingTimer = null;
+                    const cmd = this.pendingCommand;
+                    this.pendingCommand = null;
+                    if (cmd) {
+                        await this._sendShellyNow(cmd);
+                    }
+                }, Math.max(0, delay));
+            }
+            return;
+        }
+
+        // Send now and record timestamp
+        this.lastSendAtMs = now;
+        await this._sendShellyNow(command);
+    }
+
+    private async _sendShellyNow(command: any): Promise<void> {
         try {
             const url = `http://${this.shellyIP}/light/0`;
             const params = new URLSearchParams(command);
-            
+
             if (this.debugMode) {
                 console.log('🔌 Sending to Shelly:', url, 'Params:', command);
             }
 
-            const response = await fetch(`${url}?${params}`, {
+            await fetch(`${url}?${params}`, {
                 method: 'GET',
-                mode: 'no-cors' // Avoid CORS issues with local network
+                mode: 'no-cors'
             });
 
             if (this.debugMode) {
-                console.log('✅ Shelly command sent successfully');
+                console.log('✅ Shelly command sent (no-cors)');
             }
         } catch (error) {
             console.error('❌ Error sending to Shelly:', error);
+        } finally {
+            // Update last send time after attempt to maintain pacing
+            this.lastSendAtMs = Date.now();
         }
     }
 

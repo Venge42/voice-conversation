@@ -37,6 +37,28 @@ class WebsocketClientApp {
   private shellyAvailable: boolean = true;
   private shellyErrorCount: number = 0;
   private readonly MAX_SHELLY_ERRORS: number = 3;
+  private shellyIP: string | null = null;
+  private currentBotLightConfig: any | null = null;
+
+  /**
+   * Normalize server light_config (snake_case) to client animation structure
+   */
+  private normalizeLightConfig(raw: any): any {
+    if (!raw) return null;
+    const primary = raw.primary || raw.primary_color;
+    const fadeTo = raw.fadeTo || raw.fade_to_color || raw.fade_to;
+    const offColor = raw.offColor || raw.off_color;
+    return {
+      primary: primary || { r: 0, g: 0, b: 0, a: 1 },
+      fadeTo: fadeTo || primary || { r: 0, g: 0, b: 0, a: 1 },
+      offColor: offColor || { r: 0, g: 0, b: 0, a: 0 },
+      colorShiftSpeed: raw.colorShiftSpeed ?? raw.color_shift_speed ?? 2.0,
+      pulseSpeed: raw.pulseSpeed ?? raw.pulse_speed ?? 1.5,
+      pulseIntensity: raw.pulseIntensity ?? raw.pulse_intensity ?? 0.2,
+      breathingSpeed: raw.breathingSpeed ?? raw.breathing_speed ?? 0.8,
+      breathingIntensity: raw.breathingIntensity ?? raw.breathing_intensity ?? 0.15,
+    };
+  }
 
   constructor() {
     console.log('WebsocketClientApp');
@@ -196,7 +218,7 @@ class WebsocketClientApp {
       const r = Math.round(color.r * 255);
       const g = Math.round(color.g * 255);
       const b = Math.round(color.b * 255);
-      const a = Math.round(color.a * 255);
+      const a = 1.0; //Math.round(color.a * 255);
       
       // Apply color to preview circle
       colorPreview.style.background = `rgba(${r}, ${g}, ${b}, ${a})`;
@@ -485,20 +507,43 @@ class WebsocketClientApp {
    */
   private async setupLightControlWebSocket(): Promise<void> {
     try {
-      // Check Shelly availability first
-      this.shellyAvailable = await this.checkShellyAvailability();
-      if (this.shellyAvailable) {
-        this.log('✅ Shelly device detected and available');
-      } else {
-        this.log('⚠️ Shelly device not available, lights will only animate in UI');
-      }
-      
       // Use the same server URL that we used for the voice connection
       const serverUrl = this.lastServerUrl || import.meta.env.VITE_SERVER_URL || 'http://localhost:7860';
       const selectedBot = this.botSelect?.value;
       if (!selectedBot) {
         this.log('❌ No bot selected for light control WebSocket');
         return;
+      }
+
+      // Fetch bot config to obtain real Shelly IP and colors
+      try {
+        const configResp = await fetch(`${serverUrl}/bot-config?bot=${encodeURIComponent(selectedBot)}`);
+        if (configResp.ok) {
+          const cfg = await configResp.json();
+          // Log full received config
+          console.log('🔧 Full bot config received:', cfg);
+          this.currentBotLightConfig = this.normalizeLightConfig(cfg?.light_config || null);
+          this.shellyIP = (cfg?.light_config?.shelly_ip) || null;
+          // Inform light controller so it can send no-cors GETs to LAN Shelly
+          this.lightController.setShellyIP(this.shellyIP);
+          if (this.shellyIP) {
+            this.log(`🔍 Shelly IP for ${selectedBot}: ${this.shellyIP}`);
+          } else {
+            this.log('⚠️ No shelly_ip found in bot config; Shelly will be disabled');
+          }
+        } else {
+          this.log(`⚠️ Failed to fetch bot config: ${configResp.status}`);
+        }
+      } catch (e) {
+        this.log(`⚠️ Error fetching bot config: ${e}`);
+      }
+
+      // Check Shelly availability using configured IP
+      this.shellyAvailable = await this.checkShellyAvailability();
+      if (this.shellyAvailable) {
+        this.log('✅ Shelly device detected and available');
+      } else {
+        this.log('⚠️ Shelly device not available, lights will only animate in UI');
       }
 
       const wsUrl = serverUrl.replace('http://', 'ws://').replace('https://', 'wss://');
@@ -565,11 +610,12 @@ class WebsocketClientApp {
       this.lightController.handleLightCommand(message);
       
       // Update color display with the received color
+      // Use full alpha for UI visibility (white channel may be 0)
       const color = {
         r: message.command.red / 255,
         g: message.command.green / 255,
         b: message.command.blue / 255,
-        a: message.command.white / 255
+        a: 1.0
       };
       console.log('🎨 Extracted color:', color);
       this.updateColorDisplay(color);
@@ -584,10 +630,10 @@ class WebsocketClientApp {
   private startLightAnimation(botConfig: string): void {
     console.log(`🎨 Starting light animation for ${botConfig}`);
     
-    // Get bot configuration for colors
-    const botColors = this.getBotColors(botConfig);
+    // Use server-provided light config
+    const botColors = this.currentBotLightConfig;
     if (!botColors) {
-      console.warn(`⚠️ No color config found for ${botConfig}`);
+      console.warn(`⚠️ No light_config loaded for ${botConfig}`);
       return;
     }
     
@@ -619,6 +665,7 @@ class WebsocketClientApp {
   private runLightAnimation(botConfig: string, colors: any): void {
     let startTime = Date.now();
     
+    // Run at 10 FPS to limit Shelly update rate
     this.lightAnimationInterval = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000; // seconds
       
@@ -631,13 +678,17 @@ class WebsocketClientApp {
       // Update color display
       this.updateColorDisplay(animatedColor);
       
-    }, 1000 / 30); // 30 FPS
+    }, 1000 / 30); // 10 FPS
   }
 
   /**
    * Calculate animated color with enhanced variation
    */
   private calculateAnimatedColor(colors: any, elapsed: number): any {
+    if (!colors || !colors.primary || !colors.fadeTo) {
+      // Guard against missing config; fall back to no-op color
+      return this.clampColor(this.currentDisplayedColor || { r: 0, g: 0, b: 0, a: 1 });
+    }
     // Enhanced color shifting with multiple phases
     const colorShiftFactor = this.calculateColorShiftFactor(elapsed, colors.colorShiftSpeed);
     const baseColor = this.lerpColor(colors.primary, colors.fadeTo, colorShiftFactor);
@@ -669,6 +720,9 @@ class WebsocketClientApp {
    * Helper methods for color calculations
    */
   private lerpColor(a: any, b: any, t: number): any {
+    if (!a || !b) {
+      return this.clampColor(this.currentDisplayedColor || { r: 0, g: 0, b: 0, a: 1 });
+    }
     return {
       r: a.r + (b.r - a.r) * t,
       g: a.g + (b.g - a.g) * t,
@@ -761,70 +815,29 @@ class WebsocketClientApp {
   /**
    * Get bot color configuration
    */
-  private getBotColors(botConfig: string): any {
-    // This would come from your bot config files
-    const colorConfigs: { [key: string]: any } = {
-      'Charon': {
-        primary: { r: 0.3, g: 0.0, b: 0.4, a: 1.0 },
-        fadeTo: { r: 0.8, g: 0.2, b: 0.9, a: 1.0 }, // More vibrant purple-red
-        offColor: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-        colorShiftSpeed: 1.2,
-        pulseSpeed: 0.8,
-        pulseIntensity: 0.3,
-        breathingSpeed: 0.5,
-        breathingIntensity: 0.2
-      },
-      'Kore': {
-        primary: { r: 0.1, g: 0.8, b: 0.1, a: 1.0 },
-        fadeTo: { r: 0.3, g: 0.9, b: 0.4, a: 1.0 }, // More vibrant green-cyan
-        offColor: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-        colorShiftSpeed: 1.5,
-        pulseSpeed: 2.5,
-        pulseIntensity: 0.15,
-        breathingSpeed: 2.0,
-        breathingIntensity: 0.25
-      },
-      'Puck': {
-        primary: { r: 0.1, g: 0.1, b: 0.8, a: 1.0 },
-        fadeTo: { r: 0.4, g: 0.3, b: 0.9, a: 1.0 }, // More vibrant blue-purple
-        offColor: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-        colorShiftSpeed: 2.5,
-        pulseSpeed: 3.5,
-        pulseIntensity: 0.3,
-        breathingSpeed: 1.8,
-        breathingIntensity: 0.35
-      },
-      'Zephyr': {
-        primary: { r: 0.4, g: 0.7, b: 1.0, a: 1.0 },
-        fadeTo: { r: 0.8, g: 0.9, b: 0.6, a: 1.0 }, // More vibrant cyan-yellow
-        offColor: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-        colorShiftSpeed: 2.5,
-        pulseSpeed: 2.0,
-        pulseIntensity: 0.25,
-        breathingSpeed: 1.2,
-        breathingIntensity: 0.18
-      }
-    };
-    
-    return colorConfigs[botConfig];
-  }
+  // Removed getBotColors. Colors now come from server-provided light_config.
 
   /**
    * Check if Shelly device is available
    */
   private async checkShellyAvailability(): Promise<boolean> {
     try {
-      const shellyIP = '192.168.2.77';
+      const shellyIP = this.shellyIP;
+      if (!shellyIP) {
+        return false;
+      }
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
       
       const response = await fetch(`http://${shellyIP}/light/0`, {
         method: 'GET',
+        mode: 'no-cors',
         signal: controller.signal
       });
       
       clearTimeout(timeoutId);
-      return response.ok;
+      // Opaque response from no-cors still indicates device reachable
+      return response.ok || (response as any).type === 'opaque';
     } catch (error) {
       console.log(`🔍 Shelly availability check failed: ${error}`);
       return false;
@@ -848,31 +861,24 @@ class WebsocketClientApp {
       const blue = Math.round(color.b * 255);
       const white = Math.round(color.a * 255);
       
-      // Get Shelly IP from config (you might want to store this per bot)
-      const shellyIP = '192.168.2.77'; // This should come from config
-      
-      // Send HTTP command to Shelly
-      const url = `http://${shellyIP}/light/0`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          turn: 'on',
-          mode: 'color',
-          red: red,
-          green: green,
-          blue: blue,
-          white: white
-        })
-      });
-      
-      if (!response.ok) {
-        console.warn(`⚠️ Failed to set light color: ${response.status}`);
+      // Use Shelly IP from loaded config
+      const shellyIP = this.shellyIP;
+      if (!shellyIP) {
         this.handleShellyError();
-      } else {
-        // Reset error count on success
-        this.shellyErrorCount = 0;
+        return;
       }
+      
+      // Use light controller to send GET with no-cors to LAN device (avoids CORS)
+      await this.lightController.sendToShelly({
+        turn: 'on',
+        mode: 'color',
+        red,
+        green,
+        blue,
+        white,
+      });
+      // We can't inspect response in no-cors; assume success and reset error count
+      this.shellyErrorCount = 0;
       
     } catch (error) {
       console.error('❌ Error setting light color:', error);
@@ -884,10 +890,10 @@ class WebsocketClientApp {
    * Fade smoothly from current color to off color
    */
   private fadeToOffColor(botConfig: string): void {
-    console.log(`🎨 Starting fade to off for ${botConfig}`);
+    console.log(`🎨 Applying single off update for ${botConfig}`);
     
-    // Get bot's configured off color
-    const botColors = this.getBotColors(botConfig);
+    // Get bot's configured off color from server config
+    const botColors = this.currentBotLightConfig;
     if (!botColors) {
       console.warn(`⚠️ No color config found for ${botConfig}, using default off`);
       this.turnOffLights(botConfig);
@@ -895,35 +901,9 @@ class WebsocketClientApp {
     }
     
     const offColor = botColors.offColor;
-    const fadeDuration = 1000; // 1 second fade
-    const fadeSteps = 30; // 30 steps for smooth fade
-    const stepDuration = fadeDuration / fadeSteps;
-    
-    let currentStep = 0;
-    
-    const fadeInterval = setInterval(() => {
-      currentStep++;
-      const progress = currentStep / fadeSteps;
-      
-      // Interpolate from current color to off color
-      const currentColor = this.currentDisplayedColor || { r: 1, g: 1, b: 1, a: 1 };
-      const fadeColor = this.lerpColor(currentColor, offColor, progress);
-      
-      // Apply the faded color
-      this.applyLightColor(botConfig, fadeColor);
-      this.updateColorDisplay(fadeColor);
-      
-      if (currentStep >= fadeSteps) {
-        clearInterval(fadeInterval);
-        console.log(`🎨 Fade to off completed for ${botConfig}`);
-        
-        // Ensure final off color is applied
-        this.applyLightColor(botConfig, offColor);
-        this.updateColorDisplay(offColor);
-      }
-    }, stepDuration);
-    
-    console.log(`🎨 Fade transition started: ${fadeSteps} steps over ${fadeDuration}ms`);
+    // Single update only; no step-wise fade on device to reduce traffic
+    this.applyLightColor(botConfig, offColor);
+    this.updateColorDisplay(offColor);
   }
 
   /**
@@ -946,8 +926,8 @@ class WebsocketClientApp {
    */
   private async turnOffLights(botConfig: string): Promise<void> {
     try {
-      // Get bot's configured off color
-      const botColors = this.getBotColors(botConfig);
+      // Get bot's configured off color from server config
+      const botColors = this.currentBotLightConfig;
       if (!botColors) {
         console.warn(`⚠️ No color config found for ${botConfig}, using default off`);
         // Fallback to default off

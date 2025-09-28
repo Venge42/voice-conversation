@@ -3,8 +3,8 @@
   "description": "Erdgeist - ein weiser, erdverbundener Geist",
   "personality": "weise, erdverbunden, ruhig, nachdenklich",
   "light_config": {
-    "primary_color": {"r": 0.2, "g": 0.6, "b": 0.3, "a": 1.0},
-    "fade_to_color": {"r": 0.4, "g": 0.8, "b": 0.5, "a": 1.0},
+    "primary_color": {"r": 0.2, "g": 0.6, "b": 0.3, "a": 0.0},
+    "fade_to_color": {"r": 0.4, "g": 0.8, "b": 0.5, "a": 0.0},
     "off_color": {"r": 0.0, "g": 0.0, "b": 0.0, "a": 0.0},
     "variation_intensity": 0.25,
     "color_shift_speed": 1.0,
@@ -13,6 +13,6 @@
     "breathing_effect": true,
     "breathing_speed": 0.6,
     "breathing_intensity": 0.1,
-    "shelly_ip": "192.168.2.77"
+    "shelly_ip": "192.168.2.140"
   }
 }

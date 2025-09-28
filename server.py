@@ -208,6 +208,34 @@ async def bot_connect(request: Request) -> Dict[Any, Any]:
     return {"ws_url": ws_url}
 
 
+@app.get("/bot-config")
+async def get_bot_config(request: Request) -> Dict[str, Any]:
+    """Return the light configuration for a specific bot, including shelly_ip.
+
+    Query params:
+      - bot: bot name (e.g., "Zephyr")
+    """
+    import json
+    from pathlib import Path
+
+    bot = request.query_params.get("bot")
+    if not bot:
+        return {"error": "Missing 'bot' query parameter"}
+
+    config_path = Path("lore") / "bots" / bot / "config.json"
+    if not config_path.exists():
+        return {"error": f"Config for bot '{bot}' not found"}
+
+    try:
+        with config_path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        # Extract only light_config for minimal payload
+        light_config = data.get("light_config", {})
+        return {"bot": bot, "light_config": light_config}
+    except Exception as e:
+        return {"error": f"Failed to read config for '{bot}': {e}"}
+
+
 @app.get("/light-status")
 async def get_light_status() -> Dict[str, Any]:
     """Get the status of all active light controllers."""

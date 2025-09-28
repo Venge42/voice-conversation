@@ -184,6 +184,7 @@ async def run_bot(
             system_instruction=system_instruction,
             # model="models/gemini-2.5-flash-live-preview",
             model="models/gemini-2.5-flash-preview-native-audio-dialog",  # Use the same model as websocket server
+            # model="models/gemini-2.5-flash-exp-native-audio-thinking-dialog",
             # model="models/gemini-2.0-flash-live-001",
             language="de-DE",
             # Enable TTS to generate speech frames

@@ -3,8 +3,8 @@
   "description": "Windgeist - ein luftiger, poetischer Geist",
   "personality": "poetisch, luftig, metaphorisch, verspielt",
   "light_config": {
-    "primary_color": {"r": 0.4, "g": 0.7, "b": 1.0, "a": 1.0},
-    "fade_to_color": {"r": 0.6, "g": 0.9, "b": 0.8, "a": 1.0},
+    "primary_color": {"r": 0.4, "g": 0.7, "b": 0.5, "a": 0.0},
+    "fade_to_color": {"r": 0.6, "g": 0.9, "b": 0.8, "a": 0.0},
     "off_color": {"r": 0.0, "g": 0.0, "b": 0.0, "a": 0.0},
     "variation_intensity": 0.35,
     "color_shift_speed": 2.5,
@@ -13,6 +13,6 @@
     "breathing_effect": true,
     "breathing_speed": 1.2,
     "breathing_intensity": 0.18,
-    "shelly_ip": "192.168.2.77"
+    "shelly_ip": "192.168.2.140"
   }
 }
