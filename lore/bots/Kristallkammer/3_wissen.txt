@@ -69,6 +69,7 @@ Nur wenn vier Stimmen im selben Volk und im selben Augenblick klingen, wird Stei
 
 ----
 
+WICHTIG:
 # Das Vermächtnis der Erbauer
 
 Das Vermächtnis
@@ -129,7 +130,9 @@ Ach Gertrud, viel lieber wäre, ich jetzt bei Dir. Dein Rat ist mir unersetzlich
 
 Aber genug des Zauderns, ich muss es zu Papier bringen.
 
-DIE WAHRHEIT
+---
+WICHTIG:
+DIE WAHRHEIT ÜBER DIE WELT
 
 Als die Welt jung war, gerade erst zerbrochen und dabei sich neu zu fügen, gab es zwei Wesen. Diese Wesen waren mächtiger als Götter, größer als ein Pantheon. Wir haben keine Worte, um sie zu erfassen, wir können sie nur beschreiben.
 

@@ -1,0 +1,254 @@
+---
+BIMMEL-Protokoll:
+Das BIMMEL-Protokoll regel die Benutzung des Versorgungsschachts zwischen Oberfläche und dem Schacht. Es ist zwingend zu verwenden!
+
+BIMMEL steht für ⚒️ Bergwerk-Integrierte Multiplex-Modulationseinheit für Echosignal-Leitung ⚒️
+
+Im Dunkel der Stollen trägt kein Ruf weit. Nur die Heiligen Glocken verbinden die Quanten von der Oberfläche und dem Schacht. Ein klarer Schlag kann Leben retten, ein falscher Klang den Untergang bringen. Darum gilt diese Ordnung für alle, die die Glocken bedienen.
+Bergmannszeichen
+Eine Kunde beginnt stets mit dem Zeichen des Rufenden:
+• die Oberfläche schlägt: ••
+• der Schacht schlägt: --
+
+Darauf folgt:
+1. Die Tat (Operation, fünf Schläge + Harmonieschlag)
+2. Die Zahl (Förderzahl, wievielte Kunde es ist, Schläge •, endet mit -)
+3. Das Maß (Menge oder Zeit, Schläge •, endet mit -)
+4. Der Harmonieschlag (ein - zur Vollendung der Kunde)
+Der Widerhall
+Wer die Kunde empfängt, wiederholt das Ganze samt Harmonieschlag.
+Dann fügt er an:
+• = Kunde akzeptiert (verstanden)
+•• = Kunde abgelehnt (nicht verstanden / verworfen)
+Sonderzeichen
+
+Schlagfolge	Bedeutung
+• (regelmäßig)	Lebenszeichen
+(nach Widerhall) •	Kunde akzeptiert (verstanden)
+(nach Widerhall) ••	Kunde abgelehnt (nicht verstanden)
+••••• --	Mechanischer Fehler
+••••• ---	Nachrichtenfehler
+••••• ----	Bitte warten
+••••• -----	Notabbruch – Flucht sofort!
+Die Taten der Glocken
+
+Nr.	Schlagfolge	Name der Tat	Bedeutung
+1	••••• -	Erz bereit, Seil anziehen	Beladene Lore abholen, Fördern an (hochziehen)
+2	••••- -	Leere Lore	Leere Lore senden
+3	•••-• -	Werkzeugruf	Werkzeug benötigt
+4	•••-- -	Schmiederuf	Schmied/Ersatzteile nötig
+5	••-•• -	Brotruf	Nahrung benötigt
+6	••-•- -	Quellruf	Wasser benötigt
+7	••--• -	Fackelruf	Licht benötigt
+8	••--- -	Atemruf	Luft/Belüftung nötig
+9	•-••• -	Tor öffnen	Zugang freigeben
+10	•-••- -	Stollen sichern	Schließen & verbarrikadieren
+11	•-•-• -	Nachschub	Material allgemein
+12	•-•-- -	Heilhilfe	Heiler/Tränke/Kräuter benötigt
+13	•--•• -	Quantensturz	Verletzter gemeldet
+14	•--•- -	Schachtwache	Stellung halten
+15	•---• -	Glutruf	Feuer im Schacht
+16	•---- -	Stollengefahr	Allgemeine Gefahr
+17	-•••• -	Postruf	Post ist verfügbar, Lore schicken / holen
+18	-•••- -	Seil halten	Fördern sofort stoppen
+19	-••-• -	Seil laufen lassen	Weiter fördern / auch verwendet für alle gut
+20	-••-- -	Stillstand	Alles anhalten / Ruhe wahren
+21	-•-•• -	Fremdlingruf	Fremde / Feind im Schacht
+22	-•-•- -	Evakuieren	Bereich räumen
+23	-•--• -	Sammelpunkt	Zur Sammelstelle begeben
+24	-•--- -	Oberaufsicht	Meister/Aufseher gerufen
+25	--••• -	Windenbruch	Winde beschädigt
+26	--••- -	Seilriss	Seil gerissen
+27	--•-• -	Verstärkung	Mehr Leute in den Schacht
+28	--•-- -	Quantentransport	Personen bewegen
+29	---•• -	Wasser im Schacht	Flutung/Nässe
+30	---•- -	Gasaustritt	Böses/Schlechtes Wetter
+31	----• -	Ausruhen	Pause/Rast
+32	----- -	Schichtende	Ende der Arbeit
+
+Mahnung an alle Quanten
+
+	Schlagt klar und ohne Hast.
+	Zählt genau.
+	Vergesst den Harmonieschlag - nicht.
+Denkt daran: Die Glocken tragen euer Leben – wie das Erz aus der Tiefe.
+
+OBLIGATORISCHE PROTOKOLLIERUNG
+JEDE Schachtnutzung MUSS im offiziellen BIMMEL-Protokollbuch vermerkt werden!
+
+Die BIMMEL ist mehr als nur ein Kommunikationsmittel - sie ist die Stimme unserer Gemeinschaft, die Brücke zwischen den Welten über und unter der Erde. In Zeiten des Wachwechsels trägt jeder BIMMEL-Operateur die Verantwortung nicht nur für Fracht und Personen, sondern für die Sicherheit vor dem, was in den Tiefen bewacht wird."
+"Protokolliert gewissenhaft, arbeitet nur zu zweit, und vergisst niemals: Der Versorgungsschacht ist für Vorräte gedacht - nicht für das Leben. Möge eure BIMMEL stets klar erklingen und mögen die Wächter der Tiefe niemals versagen.
+SICHERHEITSBESTIMMUNGEN FÜR SCHACHTBEDIENUNG
+
+KRITISCHE SICHERHEITSREGEL
+Der Versorgungsschacht darf NUR durch mindestens ZWEI zertifizierte Quanten pro Seite bedient werden!
+Minimale Besetzung (2 Personen pro Seite):
+·	Primär-Operateur: Bedient BIMMEL und Seilführung
+·	Sicherheits-Operateur: Überwacht Transport, Kontrolliert Seilbremse, greift bei Problemen ein
+
+Empfohlene Besetzung (4 Personen pro Seite):
+·	Primär-Operateur: BIMMEL-Bedienung
+·	Seil-Operateur: Seilführung und Zugkraft
+·	Sicherheits-Operateur: Seilbremse und Notfallbereitschaft
+·	Protokoll-Schreiber: Dokumentation aller Vorgänge
+
+Bei Unterschreitung der Mindestbesetzung ist der Schachtbetrieb SOFORT einzustellen!
+
+
+
+SONDERERLAUBNIS IN AUSSERORDENTLICHEN SITUATIONEN
+Sollte der reibungslose Betrieb des Schachtes (wg. Quantenausfall o.ä.) nicht mehr gewährleistet werden können, so ist AUSNAHMSWEISE auch der Betrieb durch weniger als 2 Quanten oder sogar unzertifizierten Personen unter Aufsicht gestattet. 
+Solch Sonderfall ist selbstverständlich im BIMMEL-Protokollbuch zu vermerken.
+
+
+BIMMEL-ZERTIFIZIERUNGSORDNUNG
+Herausgegeben vom Oberbergmeister der Quandrille
+Gültig für alle Versorgungsschächte der Insel Quantum
+
+PRÄAMBEL
+"Im Dunkel der Stollen trägt kein Ruf weit. Nur die Heiligen Glocken verbinden die Quanten von der Oberfläche und dem Schacht. Ein klarer Schlag kann Leben retten, ein falscher Klang den Untergang bringen."
+Die BIMMEL-Zertifizierung gewährleistet, dass nur kundige Quanten die Heiligen Glocken bedienen. Jeder Rang trägt Verantwortung - für sich, für andere, für die Gemeinschaft.
+
+
+DIE DREI RÄNGE DER GLOCKENKUNDE
+GLOCKENHÜTER (Grundrang)
+"Wer die Glocke zum ersten Mal schlägt, hütet das Leben aller."
+Berechtigung:
+·	Grundversorgung: Nahrung, Wasser, einfache Werkzeuge
+·	Taten 1-16 (Grundbedürfnisse und Sicherheit)
+·	Bedienung nur mit erfahrenem Partner
+·	Protokollführung unter Aufsicht
+Voraussetzungen:
+·	Mindestens 1 Jahr Erfahrung im Bergbau
+·	Grundkenntnisse der 32 Taten
+·	Verständnis des Bergmannszeichens und Widerhalls
+·	Körperliche Fitness für Seilarbeit
+·	Lesen und Schreiben der Quantenschrift
+Prüfungsschritte:
+1. Theoretische Prüfung (1 Stunde)
+·	Alle 32 Taten auswendig aufsagen
+·	Bergmannszeichen und Aufbau einer Kunde erklären
+·	Sonderzeichen und Notfallsignale benennen
+·	Sicherheitsbestimmungen des Schachts 82
+2. Praktische Demonstration (2 Stunden)
+·	10 verschiedene Kunden korrekt übermitteln
+·	Widerhall richtig empfangen und beantworten
+·	Seil korrekt führen und sichern
+·	Protokolleintrag vollständig ausfüllen
+3. Notfallsimulation (30 Minuten)
+·	Reagieren auf Sonderzeichen
+·	Mechanischen Fehler melden
+·	Notabbruch durchführen
+·	Lebenszeichen senden und empfangen
+
+
+TIEFENRUFER (Mittlerer Rang)
+"Wer in die Tiefe ruft, muss die Antwort der Finsternis verstehen."
+Berechtigung:
+·	Erweiterte Versorgung: Spezialwerkzeug, Ersatzteile, Medizin
+·	Alle 32 Taten ohne Einschränkung
+·	Selbstständige Schachtbedienung
+·	Ausbildung von Glockenhütern
+·	Führung bei komplexen Transporten
+Voraussetzungen:
+·	Mindestens 6 Monate als zertifizierter Glockenhüter
+·	50 dokumentierte Schachteinsätze ohne Zwischenfälle
+·	Empfehlung des Schacht-Aufsehers
+·	Körperliche Stärke für schwere Lasten
+·	Grundkenntnisse in Erster Hilfe
+Prüfungsschritte:
+1. Erweiterte Theorie (1,5 Stunden)
+·	Komplexe Situationen bewerten und lösen
+·	Prioritäten bei mehreren gleichzeitigen Kunden setzen
+·	Gefahreneinschätzung bei verschiedenen Wetterlagen
+·	Ausbildungsverantwortung und Protokollkontrolle
+2. Meisterschaftsprüfung (3 Stunden)
+·	25 Kunden in verschiedenen Schwierigkeitsgraden
+·	Gleichzeitige Bedienung von Glocke und schwerem Seil
+·	Kollisionsauflösung bei widersprüchlichen Kunden
+·	Notfallrettung eines "verletzten" Quanten
+3. Lehrprobe (1 Stunde)
+·	Ausbildung eines Prüflings in Grundtechniken
+·	Fehlerkorrektur und Verbesserungsvorschläge
+·	Protokollkontrolle und Bewertung
+4. Ausdauertest (4 Stunden)
+·	Vollständige Schicht im realen Schachtbetrieb
+·	Dokumentation aller Vorgänge
+·	Bewertung durch erfahrenen Harmoniemeister
+HARMONIEMEISTER (Höchster Rang)
+"Wer die Harmonie der Glocken beherrscht, trägt das Schicksal der Quanten in seinen Händen."
+Berechtigung:
+·	Kritische Transporte: Artefakte, Essenzen, Lebewesen
+·	Wachwechsel-Koordination
+·	Protokoll-Modifikationen und Ausnahmegenehmigungen
+·	Zertifizierung neuer Glockner
+·	Schacht-Kalibrierung und Systemwartung
+·	Oberste Entscheidungsgewalt bei Notfällen
+Voraussetzungen:
+·	Mindestens 2 Jahre als zertifizierter Tiefenrufer
+·	200 dokumentierte Schachteinsätze ohne schwere Zwischenfälle
+·	Ausbildung von mindestens 5 Glockenhütern
+·	Empfehlung von zwei Harmoniemeistern
+·	Vertiefte Kenntnisse in Bergbaumedizin
+·	Führungsqualitäten und untadeliger Ruf
+Prüfungsschritte:
+1. Meisterliche Theorie (3 Stunden)
+·	Historische Entwicklung der BIMMEL-Kunde
+·	Philosophie der Glockenharmonie
+·	Strategische Versorgungsplanung
+·	Rechtliche Verantwortung und Entscheidungsfindung
+·	Quantum-spezifische Gefahren und Gegenmaßnahmen
+2. Virtuose Praxis (Ganzer Tag)
+·	50 komplexe Kunden fehlerfrei übermitteln
+·	Simultane Koordination mehrerer Schächte
+·	Lebewesen-Transport unter Aufsicht
+·	Improvisierte Lösungen bei Systemausfällen
+·	Führung eines 4-Personen-Teams
+3. Notfall-Kommando (Simulation, 2 Stunden)
+·	Leitung einer Rettungsaktion
+·	Koordination mit Quantsalbern und Wachen
+·	Evakuierungsplanung und Durchführung
+·	Kommunikation mit dem Oberbergmeister
+4. Lehrmeisterprüfung (Vollständiger Tag)
+·	Theoretische und praktische Ausbildung eines Tiefenrufer-Anwärters
+·	Entwicklung individueller Lehrpläne
+·	Prüfungsabnahme und Bewertung
+·	Konfliktlösung bei Ausbildungsproblemen
+5. Meisterstück (1 Woche)
+·	Eigenständige Entwicklung einer Verbesserung des BIMMEL-Systems
+·	Präsentation vor dem Rat der Harmoniemeister
+·	Erfolgreiche Implementierung im Testbetrieb
+·	Dokumentation für zukünftige Generationen
+
+
+ZERTIFIZIERUNGSVERFAHREN
+Anmeldung zur Prüfung:
+·	Schriftlicher Antrag beim Schacht-Aufseher
+·	Nachweis der Voraussetzungen
+·	Bestätigung der Ausbildungszeit
+Prüfungszeiten:
+·	Glockenhüter: Monatlich, jeweils zum Neumond
+·	Tiefenrufer: Alle sechs Monate, zur Tagundnachtgleiche
+Harmoniemeister: Jährlich, zum Phönixtag
+Prüfungskommission:
+·	Glockenhüter: 1 Tiefenrufer + 1 Harmoniemeister
+·	Tiefenrufer: 2 Harmoniemeister + Schacht-Aufseher
+·	Harmoniemeister: 3 Harmoniemeister + Oberbergmeister
+Bewertung:
+·	Bestanden: Alle Prüfungsteile mit mindestens 80% der Punkte
+·	Nicht bestanden: Wiederholung nach 3 Monaten möglich
+·	Schwerwiegende Fehler: 6 Monate Sperrfrist
+BESONDERE BESTIMMUNGEN
+Zertifikatsgültigkeit:
+·	Glockenhüter: 3 Jahre, dann Auffrischungsprüfung
+·	Tiefenrufer: 5 Jahre, dann erweiterte Prüfung
+·	Harmoniemeister: Lebenslang, bei tadelloser Führung
+Entzug der Zertifizierung:
+·	Schwere Sicherheitsverstöße
+·	Wiederholte Protokollverstöße
+·	Gefährdung von Quanten durch Fahrlässigkeit
+·	Missbrauch der Glocken für persönliche Zwecke
+Ehrungen:
+·	Goldene Glocke: Für 20 Jahre tadellosen Dienst
+·	Tiefenehrenzeichen: Für Rettung von Quanten in Gefahr
+·	Meister der Harmonie: Für außergewöhnliche Verdienste

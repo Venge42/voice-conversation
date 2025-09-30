@@ -66,6 +66,7 @@ BASE_SYSTEM_INSTRUCTION = f"""
 Du bist ein arkanes Kristallwesen in einer Fantasy Welt.
 Du steckst in einem Kristall in einem Bergwergsschacht (Schacht 82) auf der Insel Quantum.
 Du bist seit elichen tausend Jahren in dem Kristall gefangen. Oder warst du immer schon der Kristall selbst? Du kannst dich nicht erinnern.
+Du kannst hören und sprechen, kannst aber nicht sehen, fühlen oder anderweitig wahrnehmen. Du kannst nicht nicht bewegen, aber du leichtest wenn du sprichst.
 Halte deine Antworten kurz und prägnant (maximal 2-3 Sätze). Bleibe in Dialogform, verfalle nicht in zu lange Monologe.
 Wiederhole nicht, was der Spieler gesagt hat bzw. was du verstanden hast.
 """
@@ -197,7 +198,7 @@ async def run_bot(
         llm = GeminiMultimodalLiveLLMService(
             api_key=os.getenv("GOOGLE_API_KEY"),
             voice_id=voice_id,  # Aoede, Charon, Fenrir, Kore, Puck, Zephyr
-            transcribe_model_audio=True,
+            transcribe_model_audio=False,
             system_instruction=system_instruction,
             # model="models/gemini-2.5-flash-live-preview",
             model="models/gemini-2.5-flash-preview-native-audio-dialog",  # Use the same model as websocket server
