@@ -13,6 +13,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from loguru import logger
 from pipecat.audio.vad.silero import SileroVADAnalyzer
+from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import LLMRunFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
@@ -176,7 +177,16 @@ async def run_bot(
                 audio_in_enabled=True,
                 audio_out_enabled=True,
                 add_wav_header=False,
-                vad_analyzer=SileroVADAnalyzer(),
+                # Configure VAD with reduced sensitivity (require higher confidence/volume)
+                vad_analyzer=SileroVADAnalyzer(
+                    sample_rate=16000,
+                    params=VADParams(
+                        confidence=0.8,  # higher => less sensitive to short/noisy speech    0.7
+                        start_secs=0.3,  # require a bit more sustained speech to start     0.2
+                        stop_secs=0.5,  # stop reasonably quickly after silence             0.8
+                        min_volume=0.7,  # higher volume threshold => less sensitive        0.6
+                    ),
+                ),
                 serializer=ProtobufFrameSerializer(),
             ),
         )
