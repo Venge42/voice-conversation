@@ -207,11 +207,16 @@ async def run_bot(
 
         llm = GeminiMultimodalLiveLLMService(
             api_key=os.getenv("GOOGLE_API_KEY"),
+            base_url="generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent",
+            # base_url="aiplatform.googleapis.com/v1/publishers/",
+            # base_url="https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:streamGenerateContent",
             voice_id=voice_id,  # Aoede, Charon, Fenrir, Kore, Puck, Zephyr
             transcribe_model_audio=False,
             system_instruction=system_instruction,
-            # model="models/gemini-2.5-flash-live-preview",
-            model="models/gemini-2.5-flash-preview-native-audio-dialog",  # Use the same model as websocket server
+            model="models/gemini-2.5-flash-live-preview",  # xxx
+            # model="models/gemini-2.5-flash-preview-native-audio-dialog", #xxx
+            # model="models/gemini-live-2.5-flash-preview-native-audio-09-17",
+            # gemini-live-2.5-flash-preview-native-audio
             # model="models/gemini-2.5-flash-exp-native-audio-thinking-dialog",
             # model="models/gemini-2.0-flash-live-001",
             language="de-DE",

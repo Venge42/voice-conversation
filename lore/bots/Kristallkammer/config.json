@@ -1,5 +1,5 @@
 {
-  "voice_id": "Gacrux",
+  "voice_id": "Zephyr", 
   "description": "Kristall Wesen in der Kristallkammer / Steuerzentrale",
   "light_config": {
     "primary_color": {"r": 0.8, "g": 0.2, "b": 1.0, "a": 0.0},
