@@ -39,6 +39,10 @@ class WebsocketClientApp {
   private readonly MAX_SHELLY_ERRORS: number = 3;
   private shellyIP: string | null = null;
   private currentBotLightConfig: any | null = null;
+  private autoReconnectTimer: NodeJS.Timeout | null = null;
+  private isManualDisconnect: boolean = false;
+  private reconnectAttempts: number = 0;
+  private readonly MAX_RECONNECT_ATTEMPTS: number = 120;
 
   /**
    * Normalize server light_config (snake_case) to client animation structure
@@ -73,6 +77,7 @@ class WebsocketClientApp {
 
     this.setupDOMElements();
     this.setupEventListeners();
+    this.setupWindowEventListeners();
     
     // Initialize color display with default black
     this.updateColorDisplay({ r: 0, g: 0, b: 0, a: 0 });
@@ -109,6 +114,28 @@ class WebsocketClientApp {
     this.setupLightControlEventListeners();
     
     this.loadBots();
+  }
+
+  /**
+   * Set up window event listeners for proper cleanup
+   */
+  private setupWindowEventListeners(): void {
+    // Handle window close/refresh to prevent auto-reconnection
+    window.addEventListener('beforeunload', () => {
+      this.isManualDisconnect = true;
+      this.clearAutoReconnectTimer();
+    });
+
+    // Handle page visibility changes
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Page is hidden, but don't disconnect
+        this.log('📱 Page hidden');
+      } else {
+        // Page is visible again
+        this.log('📱 Page visible');
+      }
+    });
   }
 
   /**
@@ -293,6 +320,15 @@ class WebsocketClientApp {
     } else if (message.includes('Loaded')) {
       displayMessage = `📖 ${message.replace('Loaded', 'Geladen:')} mystische Wesen verfügbar`;
       messageClass = 'info-message';
+    } else if (message.includes('Auto-reconnection')) {
+      displayMessage = `🔄 ${message}`;
+      messageClass = 'info-message';
+    } else if (message.includes('Unexpected disconnection')) {
+      displayMessage = `⚠️ Unerwartete Verbindungstrennung erkannt`;
+      messageClass = 'error-message';
+    } else if (message.includes('Max auto-reconnection attempts')) {
+      displayMessage = `🛑 Maximale Wiederverbindungsversuche erreicht. Bitte manuell verbinden.`;
+      messageClass = 'error-message';
     }
     
     entry.textContent = `[${timestamp}] ${displayMessage}`;
@@ -322,6 +358,12 @@ class WebsocketClientApp {
           break;
         case 'Connecting':
           germanStatus = 'Verbinde...';
+          break;
+        case 'Reconnecting...':
+          germanStatus = 'Verbinde neu...';
+          break;
+        case 'Connection Lost':
+          germanStatus = 'Verbindung verloren';
           break;
       }
       this.statusSpan.textContent = germanStatus;
@@ -416,6 +458,10 @@ class WebsocketClientApp {
       // Reset client state for clean connection
       this.resetClientState();
       
+      // Reset manual disconnect flag and reconnect attempts
+      this.isManualDisconnect = false;
+      this.reconnectAttempts = 0;
+      
       const startTime = Date.now();
 
       //const transport = new DailyTransport();
@@ -434,6 +480,12 @@ class WebsocketClientApp {
             if (this.connectBtn) this.connectBtn.disabled = false;
             if (this.disconnectBtn) this.disconnectBtn.disabled = true;
             this.log('Client disconnected');
+            
+            // Start auto-reconnection if this wasn't a manual disconnect
+            if (!this.isManualDisconnect) {
+              this.log('🔄 Unexpected disconnection detected, starting auto-reconnection...');
+              this.startAutoReconnect();
+            }
           },
           onBotReady: (data: any) => {
             this.log(`Bot ready: ${JSON.stringify(data)}`);
@@ -499,6 +551,8 @@ class WebsocketClientApp {
           this.log(`Error during disconnect: ${disconnectError}`);
         }
       }
+      // Re-throw the error so auto-reconnection can handle it properly
+      throw error;
     }
   }
 
@@ -954,6 +1008,52 @@ class WebsocketClientApp {
   }
 
   /**
+   * Start auto-reconnection timer
+   */
+  private startAutoReconnect(): void {
+    if (this.isManualDisconnect || this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+      this.log('🛑 Auto-reconnection disabled (manual disconnect or max attempts reached)');
+      return;
+    }
+
+    // Clear any existing timer
+    this.clearAutoReconnectTimer();
+
+    this.reconnectAttempts++;
+    this.log(`🔄 Auto-reconnection attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS} in 60 seconds...`);
+    this.updateStatus('Reconnecting...');
+
+    this.autoReconnectTimer = setTimeout(async () => {
+      try {
+        this.log('🔄 Attempting auto-reconnection...');
+        await this.connect();
+        // Reset attempts on successful connection
+        this.reconnectAttempts = 0;
+        this.log('✅ Auto-reconnection successful');
+      } catch (error) {
+        this.log(`❌ Auto-reconnection failed: ${(error as Error).message}`);
+        // Try again if we haven't reached max attempts
+        if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
+          this.startAutoReconnect();
+        } else {
+          this.log('🛑 Max auto-reconnection attempts reached. Please reconnect manually.');
+          this.updateStatus('Connection Lost');
+        }
+      }
+    }, 60000); // 60 seconds = 1 minute
+  }
+
+  /**
+   * Clear auto-reconnection timer
+   */
+  private clearAutoReconnectTimer(): void {
+    if (this.autoReconnectTimer) {
+      clearTimeout(this.autoReconnectTimer);
+      this.autoReconnectTimer = null;
+    }
+  }
+
+  /**
    * Reset client state for clean connection
    */
   private resetClientState(): void {
@@ -965,6 +1065,9 @@ class WebsocketClientApp {
       this.lightAnimationInterval = null;
       this.log('🎨 Light animation interval cleared');
     }
+    
+    // Clear auto-reconnect timer
+    this.clearAutoReconnectTimer();
     
     // Reset color display
     this.currentDisplayedColor = { r: 0, g: 0, b: 0, a: 0 };
@@ -982,6 +1085,12 @@ class WebsocketClientApp {
   public async disconnect(): Promise<void> {
     if (this.pcClient) {
       try {
+        // Mark this as a manual disconnect to prevent auto-reconnection
+        this.isManualDisconnect = true;
+        
+        // Clear any pending auto-reconnection attempts
+        this.clearAutoReconnectTimer();
+        
         this.log('Disconnecting from bot...');
         await this.pcClient.disconnect();
         this.pcClient = null;

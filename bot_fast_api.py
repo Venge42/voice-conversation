@@ -213,8 +213,13 @@ async def run_bot(
             voice_id=voice_id,  # Aoede, Charon, Fenrir, Kore, Puck, Zephyr
             transcribe_model_audio=False,
             system_instruction=system_instruction,
-            model="models/gemini-2.5-flash-live-preview",  # xxx
-            # model="models/gemini-2.5-flash-preview-native-audio-dialog", #xxx
+            # model="models/gemini-live-2.5-flash-preview-native-audio-09-2025", #  Geht nicht
+            model="models/gemini-2.5-flash-native-audio-preview-09-2025",
+            # ---
+            # model="models/gemini-2.5-flash-live-preview",  # xxx
+            # model="models/gemini-2.5-flash-native-audio-preview-09-2025", # Quota
+            # model="models/gemini-2.5-flash-preview-native-audio-dialog",  # xxx
+            # ---
             # model="models/gemini-live-2.5-flash-preview-native-audio-09-17",
             # gemini-live-2.5-flash-preview-native-audio
             # model="models/gemini-2.5-flash-exp-native-audio-thinking-dialog",
