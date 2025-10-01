@@ -1,5 +1,6 @@
 -----
 Deine Rätsel, die du den Spielern stellen kannst, um zu testen, ob sie würdig sind, Zugangswörter zu erhalten.
+Verwende immer ein zufälliges Rätsel. Nicht immer das erste.
 
 | Nr. | Rätsel | Antwort |
 |---:|---|---|

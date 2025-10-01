@@ -157,6 +157,62 @@ async def run_bot(
     # Get connection-specific logger
     conn_logger = get_connection_logger(connection_id)
 
+    # Per-connection timeout configuration (5 minutes, configurable via env)
+    CONVERSATION_TIMEOUT = int(
+        os.getenv("CONVERSATION_TIMEOUT_SECONDS", "300")
+    )  # 5 minutes default
+    last_activity_time = time.time()
+    timeout_task = None
+
+    def reset_conversation_history():
+        """Reset the conversation history to just the initial greeting."""
+        nonlocal context_aggregator
+        try:
+            if (
+                context_aggregator
+                and hasattr(context_aggregator, "context")
+                and hasattr(context_aggregator.context, "messages")
+            ):
+                # Clear all messages and reset to initial greeting
+                context_aggregator.context.messages = [
+                    {
+                        "role": "user",
+                        "content": "Begrüße den Benutzer herzlich und stelle dich vor.",
+                    }
+                ]
+                conn_logger.info(f"🧹 Conversation history cleared for {connection_id}")
+        except Exception as e:
+            conn_logger.error(f"Error clearing conversation history: {e}")
+
+    async def conversation_timeout_handler():
+        """Handle conversation timeout - clear history but keep connection alive."""
+        nonlocal last_activity_time, timeout_task
+        try:
+            await asyncio.sleep(CONVERSATION_TIMEOUT)
+            # Check if we've had activity since this task started
+            if time.time() - last_activity_time >= CONVERSATION_TIMEOUT:
+                conn_logger.info(
+                    f"🕐 Conversation timeout for {connection_id} - no activity for {CONVERSATION_TIMEOUT} seconds"
+                )
+                reset_conversation_history()
+                timeout_task = None
+        except asyncio.CancelledError:
+            # Task was cancelled (activity detected), this is normal
+            pass
+
+    def update_activity():
+        """Update last activity time and restart timeout timer."""
+        nonlocal last_activity_time, timeout_task
+        last_activity_time = time.time()
+
+        # Cancel existing timeout task if running
+        if timeout_task and not timeout_task.done():
+            timeout_task.cancel()
+
+        # Start new timeout task
+        timeout_task = asyncio.create_task(conversation_timeout_handler())
+        conn_logger.debug(f"⏰ Activity updated for {connection_id}, timeout reset")
+
     # Initialize light controller (needed for connection_id in observer)
     light_controller = CrystalLightController(bot_config or "Puck", connection_id)
     speaking_light_observer = SpeakingLightObserver(light_controller, websocket_client)
@@ -251,6 +307,9 @@ async def run_bot(
         )
         context_aggregator = llm.create_context_aggregator(context)
 
+        # Start the initial timeout task
+        update_activity()
+
         conn_logger.info(f"🔍 Context aggregator created: {type(context_aggregator)}")
         conn_logger.info(f"🔍 Context aggregator: {context_aggregator}")
 
@@ -279,6 +338,9 @@ async def run_bot(
                 self.speaking_started = False
 
             def on_frame(self, frame):
+                # Update activity on any frame processing
+                update_activity()
+
                 frame_type = type(frame).__name__
                 conn_logger.info(f"🔍 DEBUG: Frame type: {frame_type}")
 
@@ -422,6 +484,9 @@ async def run_bot(
             #     f"🔊 MONKEY PATCHED: write_audio_frame called with {frame_type}"
             # )
 
+            # Update activity on any audio frame
+            update_activity()
+
             # Check if this is an audio frame (TTSAudioRawFrame is what we're actually getting)
             from pipecat.frames.frames import TTSAudioRawFrame
 
@@ -483,6 +548,13 @@ async def run_bot(
         raise
     finally:
         conn_logger.info("Bot session cleanup complete")
+        # Cancel timeout task if running
+        if timeout_task and not timeout_task.done():
+            timeout_task.cancel()
+            try:
+                await timeout_task
+            except asyncio.CancelledError:
+                pass
         # Ensure light controller is cleaned up
         try:
             await speaking_light_observer.cleanup()
