@@ -12,6 +12,6 @@
     "breathing_effect": true,
     "breathing_speed": 0.8,
     "breathing_intensity": 0.15,
-    "shelly_ip": "192.168.2.140"
+    "shelly_ip": "192.168.1.40"
   }
 }
